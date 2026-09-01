@@ -1,22 +1,33 @@
-public class F2 {
+class DeliverySlot {
+    private String orderId;
+    private String timeSlot;
 
-    static String reverseEachWord(String sentence) {
-        String[] words = sentence.split(" ");
-        StringBuilder result = new StringBuilder();
-
-        for (String word : words) {
-            StringBuilder reverse = new StringBuilder();
-
-            for (int i = word.length() - 1; i >= 0; i--)
-                reverse.append(word.charAt(i));
-
-            result.append(reverse).append(" ");
-        }
-
-        return result.toString().trim();
+    public DeliverySlot(String orderId, String timeSlot) {
+        this.orderId = orderId;
+        this.timeSlot = timeSlot;
     }
 
+    public DeliverySlot(String orderId) {
+        this(orderId, "ASAP");
+    }
+
+    boolean isPeakHour() {
+        return timeSlot.equals("12:00-13:00") ||
+               timeSlot.equals("13:00-14:00") ||
+               timeSlot.equals("19:00-20:00") ||
+               timeSlot.equals("20:00-21:00");
+    }
+}
+
+public class F2 {
     public static void main(String[] args) {
-        System.out.println(reverseEachWord("hello club"));
+        DeliverySlot d1 =
+            new DeliverySlot("ORD101", "13:00-14:00");
+
+        DeliverySlot d2 =
+            new DeliverySlot("ORD102");
+
+        System.out.println(d1.isPeakHour());
+        System.out.println(d2.isPeakHour());
     }
 }

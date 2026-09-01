@@ -1,21 +1,62 @@
-public class F3 {
+class Canteen {
+    String canteenCode;
+    String canteenName;
+    int trustScore;
 
-    static void parseInventoryRecord(String csvLine) {
-        String[] fields = csvLine.split(",");
-
-        if (fields.length != 3) {
-            System.out.println("Invalid Record");
-            return;
-        }
-
-        System.out.println(
-            "Product: " + fields[0] +
-            " | SKU: " + fields[1] +
-            " | Qty: " + fields[2]
-        );
+    public Canteen(String canteenCode,
+                   String canteenName,
+                   int trustScore) {
+        this.canteenCode = canteenCode;
+        this.canteenName = canteenName;
+        this.trustScore = trustScore;
     }
 
+    public Canteen(String canteenCode, String canteenName) {
+        this(canteenCode, canteenName, 3);
+    }
+
+    int compareTo(Canteen other) {
+        if (this.trustScore != other.trustScore)
+            return other.trustScore - this.trustScore;
+
+        int codeCompare =
+            this.canteenCode.compareToIgnoreCase(other.canteenCode);
+
+        if (codeCompare != 0)
+            return codeCompare;
+
+        return this.canteenName.length() - other.canteenName.length();
+    }
+
+    static Canteen[] rankCanteens(Canteen[] canteens) {
+        Canteen[] result = canteens.clone();
+
+        for (int i = 0; i < result.length - 1; i++) {
+            for (int j = 0; j < result.length - 1 - i; j++) {
+
+                if (result[j].compareTo(result[j + 1]) > 0) {
+                    Canteen temp = result[j];
+                    result[j] = result[j + 1];
+                    result[j + 1] = temp;
+                }
+            }
+        }
+
+        return result;
+    }
+}
+
+public class F3 {
     public static void main(String[] args) {
-        parseInventoryRecord("Wireless Mouse,WM-2201,150");
+        Canteen[] canteens = {
+            new Canteen("HB3-C", "Spice Junction", 3),
+            new Canteen("hb1-c", "Grand Mess", 5),
+            new Canteen("HB2-C", "Southern Treats")
+        };
+
+        Canteen[] ranked = Canteen.rankCanteens(canteens);
+
+        for (Canteen c : ranked)
+            System.out.println(c.canteenCode);
     }
 }

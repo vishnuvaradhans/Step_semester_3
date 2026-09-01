@@ -1,49 +1,51 @@
+final class SurgeFeeCalculator {
+    private final double minimumSurgePercent;
+
+    public SurgeFeeCalculator(double minimumSurgePercent) {
+        this.minimumSurgePercent = minimumSurgePercent;
+    }
+
+    final double calculateSurgeFee(double orderValue, int delayMinutes) {
+        if (orderValue < 0 || delayMinutes < 0)
+            throw new IllegalArgumentException("Invalid input");
+
+        if (delayMinutes == 0)
+            return 0;
+
+        double surgePercent = 0;
+
+        int first = Math.min(delayMinutes, 5);
+        surgePercent += first * 0.5;
+
+        if (delayMinutes > 5) {
+            int second = Math.min(delayMinutes - 5, 10);
+            surgePercent += second * 1.0;
+        }
+
+        if (delayMinutes > 15) {
+            int third = delayMinutes - 15;
+            surgePercent += third * 2.0;
+        }
+
+        double tieredFee = orderValue * surgePercent / 100;
+        double minimumFee = orderValue * minimumSurgePercent / 100;
+
+        return Math.max(tieredFee, minimumFee);
+    }
+}
+
 public class F4 {
-
-    static String normalizeCode(String raw) {
-        String code = raw.trim();
-
-        if (code.length() < 3)
-            return code;
-
-        return code.substring(0, 3).toUpperCase()
-                + code.substring(3);
-    }
-
-    static String validateAndFormat(String code) {
-
-        if (code.length() != 13)
-            return "Invalid: wrong length";
-
-        for (int i = 0; i < 3; i++) {
-            if (!Character.isLetter(code.charAt(i)))
-                return "Invalid: publisher code must be 3 letters";
-        }
-
-        for (int i = 3; i < 13; i++) {
-            if (!Character.isDigit(code.charAt(i)))
-                return "Invalid: body must contain only digits";
-        }
-
-        String publisher = code.substring(0, 3);
-        String year = code.substring(3, 7);
-        String catalog = code.substring(7, 13);
-
-        StringBuilder result = new StringBuilder();
-
-        result.append("[")
-              .append(publisher)
-              .append("] YEAR: ")
-              .append(year)
-              .append(" | CATALOG: ")
-              .append(catalog);
-
-        return result.toString();
-    }
-
     public static void main(String[] args) {
-        String code = normalizeCode(" pen2026004251 ");
+        SurgeFeeCalculator calculator =
+            new SurgeFeeCalculator(1);
 
-        System.out.println(validateAndFormat(code));
+        System.out.println("Rs " +
+            calculator.calculateSurgeFee(500, 0));
+
+        System.out.println("Rs " +
+            calculator.calculateSurgeFee(500, 1));
+
+        System.out.println("Rs " +
+            calculator.calculateSurgeFee(500, 16));
     }
 }
