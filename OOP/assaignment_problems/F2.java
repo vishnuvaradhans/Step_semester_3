@@ -1,77 +1,31 @@
-class Employee {
-    private int empId;
-    private String empName;
-    private double salary;
-
-    Employee(int empId, String empName, double salary) {
-        this.empId = empId;
-        this.empName = empName;
-        this.salary = salary;
-    }
-
-    double getSalary() {
-        return salary;
-    }
-}
-
-class ManagerEmployee extends Employee {
-    private double teamBonus;
-
-    ManagerEmployee(int empId, String empName,
-                    double salary, double teamBonus) {
-        super(empId, empName, salary);
-        this.teamBonus = teamBonus;
-    }
-
-    double effectiveSalary() {
-        return getSalary() + teamBonus;
-    }
-}
-
-class InternEmployee extends Employee {
-    private double stipendCap;
-
-    InternEmployee(int empId, String empName,
-                   double salary, double stipendCap) {
-        super(empId, empName, salary);
-        this.stipendCap = stipendCap;
-    }
-
-    double effectiveSalary() {
-        return Math.min(getSalary(), stipendCap);
-    }
-}
-
 public class F2 {
-    public static void main(String[] args) {
+    static void checkTypingAccuracy(String original, String typed) {
+        int matched = 0;
+        int firstMismatch = -1;
 
-        Employee e1 = new Employee(1, "Arun", 40000);
-        Employee e2 = new ManagerEmployee(2, "Ravi", 70000, 8000);
-        Employee e3 = new InternEmployee(3, "Kumar", 12000, 10000);
-
-        Employee[] employees = {e1, e2, e3};
-
-        for (Employee e : employees) {
-
-            if (e instanceof ManagerEmployee) {
-                ManagerEmployee m = (ManagerEmployee)e;
-                System.out.println(
-                    "Manager effective pay: Rs " + m.effectiveSalary()
-                );
-            }
-
-            else if (e instanceof InternEmployee) {
-                InternEmployee i = (InternEmployee)e;
-                System.out.println(
-                    "Intern effective pay: Rs " + i.effectiveSalary()
-                );
-            }
-
-            else {
-                System.out.println(
-                    "Plain employee pay: Rs " + e.getSalary()
-                );
-            }
+        for (int i = 0; i < original.length(); i++) {
+            if (original.charAt(i) == typed.charAt(i))
+                matched++;
+            else if (firstMismatch == -1)
+                firstMismatch = i;
         }
+
+        double accuracy = (matched * 100.0) / original.length();
+
+        System.out.printf("Matched: %d/%d | Accuracy: %.2f%%",
+                matched, original.length(), accuracy);
+
+        if (firstMismatch == -1) {
+            System.out.println(" | No Mismatches");
+        } else {
+            System.out.println(" | First Mismatch at position " +
+                    (firstMismatch + 1) + " ('" +
+                    original.charAt(firstMismatch) + "' vs '" +
+                    typed.charAt(firstMismatch) + "')");
+        }
+    }
+
+    public static void main(String[] args) {
+        checkTypingAccuracy("hello world", "hello worlt");
     }
 }

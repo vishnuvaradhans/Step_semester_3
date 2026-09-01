@@ -1,65 +1,27 @@
-class ParkingSlot {
-    String slotNo;
-    int capacity;
-    int occupiedCount;
-
-    ParkingSlot(String slotNo, int capacity, int occupiedCount) {
-        this.slotNo = slotNo;
-        this.capacity = capacity;
-        this.occupiedCount = occupiedCount;
-    }
-
-    void allot(String vehicleNo) {
-        if (occupiedCount < capacity) {
-            occupiedCount++;
-            System.out.println(
-                vehicleNo + " allotted to slot " + slotNo
-            );
-        }
-    }
-}
-
 public class F3 {
+    static void findLongestStreak(String signalLog) {
+        char longestColor = signalLog.charAt(0);
+        int longest = 1;
+        int current = 1;
 
-    static ParkingSlot findAvailableSlot(ParkingSlot[] slots) {
+        for (int i = 1; i < signalLog.length(); i++) {
+            if (signalLog.charAt(i) == signalLog.charAt(i - 1)) {
+                current++;
+            } else {
+                current = 1;
+            }
 
-        for (ParkingSlot s : slots) {
-            if (s.occupiedCount < s.capacity)
-                return s;
+            if (current > longest) {
+                longest = current;
+                longestColor = signalLog.charAt(i);
+            }
         }
 
-        return null;
-    }
-
-    static void safeAllot(ParkingSlot[] slots, String vehicleNo) {
-
-        ParkingSlot slot = findAvailableSlot(slots);
-
-        if (slot != null)
-            slot.allot(vehicleNo);
-        else
-            System.out.println(
-                "No slots available for " + vehicleNo
-            );
+        System.out.println("Longest Streak: '" + longestColor +
+                "' repeated " + longest + " times");
     }
 
     public static void main(String[] args) {
-
-        ParkingSlot[] available = {
-            new ParkingSlot("A1", 4, 3),
-            new ParkingSlot("A2", 5, 5)
-        };
-
-        safeAllot(available, "TN09AB1234");
-
-        ParkingSlot[] full = {
-            new ParkingSlot("A1", 4, 4),
-            new ParkingSlot("A2", 5, 5)
-        };
-
-        safeAllot(full, "TN09AB1234");
-
-        // The array stores references to ParkingSlot objects.
-        // Passing the array does not create copies of the slot objects.
+        findLongestStreak("RRGGGYRR");
     }
 }
