@@ -1,31 +1,22 @@
 public class F2 {
-    static void checkTypingAccuracy(String original, String typed) {
-        int matched = 0;
-        int firstMismatch = -1;
 
-        for (int i = 0; i < original.length(); i++) {
-            if (original.charAt(i) == typed.charAt(i))
-                matched++;
-            else if (firstMismatch == -1)
-                firstMismatch = i;
+    static String reverseEachWord(String sentence) {
+        String[] words = sentence.split(" ");
+        StringBuilder result = new StringBuilder();
+
+        for (String word : words) {
+            StringBuilder reverse = new StringBuilder();
+
+            for (int i = word.length() - 1; i >= 0; i--)
+                reverse.append(word.charAt(i));
+
+            result.append(reverse).append(" ");
         }
 
-        double accuracy = (matched * 100.0) / original.length();
-
-        System.out.printf("Matched: %d/%d | Accuracy: %.2f%%",
-                matched, original.length(), accuracy);
-
-        if (firstMismatch == -1) {
-            System.out.println(" | No Mismatches");
-        } else {
-            System.out.println(" | First Mismatch at position " +
-                    (firstMismatch + 1) + " ('" +
-                    original.charAt(firstMismatch) + "' vs '" +
-                    typed.charAt(firstMismatch) + "')");
-        }
+        return result.toString().trim();
     }
 
     public static void main(String[] args) {
-        checkTypingAccuracy("hello world", "hello worlt");
+        System.out.println(reverseEachWord("hello club"));
     }
 }

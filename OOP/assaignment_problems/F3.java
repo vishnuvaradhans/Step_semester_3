@@ -1,27 +1,21 @@
 public class F3 {
-    static void findLongestStreak(String signalLog) {
-        char longestColor = signalLog.charAt(0);
-        int longest = 1;
-        int current = 1;
 
-        for (int i = 1; i < signalLog.length(); i++) {
-            if (signalLog.charAt(i) == signalLog.charAt(i - 1)) {
-                current++;
-            } else {
-                current = 1;
-            }
+    static void parseInventoryRecord(String csvLine) {
+        String[] fields = csvLine.split(",");
 
-            if (current > longest) {
-                longest = current;
-                longestColor = signalLog.charAt(i);
-            }
+        if (fields.length != 3) {
+            System.out.println("Invalid Record");
+            return;
         }
 
-        System.out.println("Longest Streak: '" + longestColor +
-                "' repeated " + longest + " times");
+        System.out.println(
+            "Product: " + fields[0] +
+            " | SKU: " + fields[1] +
+            " | Qty: " + fields[2]
+        );
     }
 
     public static void main(String[] args) {
-        findLongestStreak("RRGGGYRR");
+        parseInventoryRecord("Wireless Mouse,WM-2201,150");
     }
 }

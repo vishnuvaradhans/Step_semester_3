@@ -1,30 +1,50 @@
-public class F5 {
-    static void classifyWordLengths(String review) {
-        String[] words = review.split(" ");
+import java.util.*;
 
-        int shortWords = 0;
-        int mediumWords = 0;
-        int longWords = 0;
+public class F5 {
+
+    static void printFilteredWordFrequency(String feedback) {
+
+        String[] stopWords =
+            {"the", "was", "and", "a", "is", "of", "in"};
+
+        feedback = feedback.toLowerCase()
+                           .replace(".", "")
+                           .replace(",", "");
+
+        String[] words = feedback.split("\\s+");
+
+        HashMap<String, Integer> frequency = new HashMap<>();
 
         for (String word : words) {
-            int length = word.length();
+            boolean stopWord = false;
 
-            if (length <= 4)
-                shortWords++;
-            else if (length <= 8)
-                mediumWords++;
-            else
-                longWords++;
+            for (String stop : stopWords) {
+                if (word.equals(stop)) {
+                    stopWord = true;
+                    break;
+                }
+            }
+
+            if (!stopWord) {
+                frequency.put(
+                    word,
+                    frequency.getOrDefault(word, 0) + 1
+                );
+            }
         }
 
-        System.out.println("Short: " + shortWords +
-                " | Medium: " + mediumWords +
-                " | Long: " + longWords);
+        List<Map.Entry<String, Integer>> list =
+            new ArrayList<>(frequency.entrySet());
+
+        list.sort((a, b) -> b.getValue() - a.getValue());
+
+        for (Map.Entry<String, Integer> entry : list)
+            System.out.println(entry.getKey() + ": " + entry.getValue());
     }
 
     public static void main(String[] args) {
-        classifyWordLengths(
-                "This movie was absolutely fantastic and thrilling"
+        printFilteredWordFrequency(
+            "The mentor was great, the session was great and clear."
         );
     }
 }
