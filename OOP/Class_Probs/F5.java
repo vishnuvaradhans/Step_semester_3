@@ -1,55 +1,125 @@
-public class F5 {
+class BusTicketAccount {
+    String bookingId;
+    double ticketFare;
 
-    static String normalizeReference(String raw) {
-        String ref = raw.trim();
+    static String depotName;
 
-        if (ref.length() < 3)
-            return ref;
-
-        return ref.substring(0, 3).toUpperCase()
-                + ref.substring(3);
+    static {
+        depotName = "Central Bus Depot";
     }
 
-    static String validateAndFormat(String reference) {
+    public BusTicketAccount(String bookingId, double ticketFare) {
+        this.bookingId = bookingId;
+        this.ticketFare = ticketFare;
+    }
 
-        if (reference.length() != 14)
-            return "Invalid: wrong length";
+    public BusTicketAccount(String bookingId) {
+        this(bookingId, 0);
+    }
 
-        for (int i = 0; i < 3; i++) {
-            if (!Character.isLetter(reference.charAt(i)))
-                return "Invalid: bank code must be 3 letters";
+    final double calculatePenalty(int minutesLate) {
+
+        if (minutesLate < 0)
+            throw new IllegalArgumentException("Invalid delay");
+
+        if (minutesLate == 0)
+            return 0;
+
+        double percent = 0;
+
+        percent += Math.min(minutesLate, 5) * 0.5;
+
+        if (minutesLate > 5)
+            percent += Math.min(minutesLate - 5, 10);
+
+        if (minutesLate > 15)
+            percent += (minutesLate - 15) * 2.0;
+
+        return ticketFare * percent / 100;
+    }
+}
+
+class Sleeper extends BusTicketAccount {
+
+    public Sleeper(String bookingId, double ticketFare) {
+        super(bookingId, ticketFare);
+    }
+}
+
+public class F5 {
+
+    static double processAccount(BusTicketAccount account,
+                                 double amount,
+                                 int minutesLate) {
+
+        account.ticketFare = amount;
+
+        double penalty = account.calculatePenalty(minutesLate);
+
+        if (account instanceof Sleeper)
+            penalty *= 0.9;
+
+        return penalty;
+    }
+
+    static void processBatch(BusTicketAccount[] accounts,
+                             double[] amounts,
+                             int[] minutesLateArray) {
+
+        if (accounts.length != amounts.length ||
+            accounts.length != minutesLateArray.length) {
+            System.out.println("Invalid batch: array lengths do not match");
+            return;
         }
 
-        for (int i = 3; i < 14; i++) {
-            if (!Character.isDigit(reference.charAt(i)))
-                return "Invalid: body must contain only digits";
+        int processed = 0;
+        int nullSkipped = 0;
+        int sleeper = 0;
+        int regular = 0;
+
+        double grandTotal = 0;
+
+        for (int i = 0; i < accounts.length; i++) {
+
+            if (accounts[i] == null) {
+                nullSkipped++;
+                continue;
+            }
+
+            grandTotal += processAccount(
+                accounts[i],
+                amounts[i],
+                minutesLateArray[i]
+            );
+
+            processed++;
+
+            if (accounts[i] instanceof Sleeper)
+                sleeper++;
+            else
+                regular++;
         }
 
-        String bank = reference.substring(0, 3);
-
-        String date = reference.substring(3, 5) + "/" +
-                      reference.substring(5, 7) + "/" +
-                      reference.substring(7, 9);
-
-        String sequence = reference.substring(9, 14);
-
-        StringBuilder result = new StringBuilder();
-
-        result.append("[")
-              .append(bank)
-              .append("] DATE: ")
-              .append(date)
-              .append(" | SEQ: ")
-              .append(sequence);
-
-        return result.toString();
+        System.out.println(
+            processed + " processed | " +
+            nullSkipped + " null skipped | " +
+            sleeper + " sleeper | " +
+            regular + " regular | " +
+            "grand total penalties = Rs " + grandTotal
+        );
     }
 
     public static void main(String[] args) {
-        String raw = " hdf03022600042 ";
 
-        String reference = normalizeReference(raw);
+        BusTicketAccount[] accounts = {
+            new Sleeper("BK001", 2000),
+            null,
+            new BusTicketAccount("BK002", 1200)
+        };
 
-        System.out.println(validateAndFormat(reference));
+        double[] amounts = {1200, 900, 700};
+        int[] minutesLate = {10, 5, 0};
+
+        processBatch(accounts, amounts, minutesLate);
     }
 }

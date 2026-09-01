@@ -1,27 +1,83 @@
-public class F1 {
-    static void countVowelsAndConsonants(String text) {
-        int vowels = 0, consonants = 0;
+import java.util.HashSet;
 
-        text = text.toLowerCase();
+class BusTicket {
+    private String passengerName;
+    private String destination;
+    private boolean checkedIn;
 
-        for (int i = 0; i < text.length(); i++) {
-            char ch = text.charAt(i);
+    public BusTicket(String passengerName, String destination) {
+        if (passengerName == null || passengerName.trim().isEmpty())
+            throw new IllegalArgumentException();
 
-            if (ch == ' ')
-                continue;
+        if (destination == null || destination.trim().isEmpty())
+            throw new IllegalArgumentException();
 
-            if (ch == 'a' || ch == 'e' || ch == 'i' ||
-                ch == 'o' || ch == 'u')
-                vowels++;
-            else
-                consonants++;
+        for (int i = 0; i < passengerName.length(); i++) {
+            char ch = passengerName.charAt(i);
+
+            if (!Character.isLetter(ch) && ch != ' ')
+                throw new IllegalArgumentException();
         }
 
-        System.out.println("Vowels: " + vowels +
-                           " | Consonants: " + consonants);
+        this.passengerName = passengerName.trim();
+        this.destination = destination.trim();
+        this.checkedIn = false;
     }
 
+    void markCheckedIn() {
+        if (checkedIn)
+            System.out.println("Ticket already checked in");
+        else {
+            checkedIn = true;
+            System.out.println("Check-in successful");
+        }
+    }
+
+    static void processBatch(String[][] rawBookings) {
+        int valid = 0, rejected = 0, duplicates = 0;
+
+        HashSet<String> accepted = new HashSet<>();
+
+        for (String[] booking : rawBookings) {
+            try {
+                BusTicket ticket =
+                    new BusTicket(booking[0], booking[1]);
+
+                String key =
+                    ticket.passengerName.toLowerCase() + "|" +
+                    ticket.destination.toLowerCase();
+
+                if (accepted.contains(key))
+                    duplicates++;
+                else {
+                    accepted.add(key);
+                    valid++;
+                }
+
+            } catch (Exception e) {
+                rejected++;
+            }
+        }
+
+        System.out.println(
+            "Valid: " + valid +
+            " | Rejected: " + rejected +
+            " | Duplicates skipped: " + duplicates
+        );
+    }
+}
+
+public class F1 {
     public static void main(String[] args) {
-        countVowelsAndConsonants("Java Programming");
+
+        String[][] bookings = {
+            {"Divya", "Chennai"},
+            {"", "Bangalore"},
+            {"Ravi123", "Pune"},
+            {"Divya", "Chennai"},
+            {" ", " "}
+        };
+
+        BusTicket.processBatch(bookings);
     }
 }
