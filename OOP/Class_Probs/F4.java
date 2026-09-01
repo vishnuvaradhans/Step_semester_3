@@ -1,28 +1,22 @@
 public class F4 {
+    static String maskPhoneNumber(String phone) {
 
-    static char findFirstNonRepeatingChar(String text) {
-        int[] frequency = new int[256];
+        if (phone.length() != 10)
+            return "Invalid phone number";
 
-        for (int i = 0; i < text.length(); i++)
-            frequency[text.charAt(i)]++;
-
-        for (int i = 0; i < text.length(); i++) {
-            if (frequency[text.charAt(i)] == 1)
-                return text.charAt(i);
+        for (int i = 0; i < phone.length(); i++) {
+            if (!Character.isDigit(phone.charAt(i)))
+                return "Invalid phone number";
         }
 
-        return '\0';
+        StringBuilder masked = new StringBuilder("XXXXXX");
+        masked.append(phone.substring(6));
+        masked.insert(6, "-");
+
+        return masked.toString();
     }
 
     public static void main(String[] args) {
-        String text = "swiss";
-
-        char result = findFirstNonRepeatingChar(text);
-
-        if (result == '\0')
-            System.out.println("No Non-Repeating Character Found");
-        else
-            System.out.println(
-                    "First Non-Repeating Character: '" + result + "'");
+        System.out.println(maskPhoneNumber("9876543210"));
     }
 }
