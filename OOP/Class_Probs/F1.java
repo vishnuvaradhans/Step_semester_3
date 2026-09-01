@@ -1,54 +1,48 @@
-class SrmStudent {
-    String name;
-    String regNo;
-    int attendance;
-
-    SrmStudent(String name, String regNo, int attendance) {
-        this.name = name;
-        this.regNo = regNo;
-        this.attendance = attendance;
-    }
-
-    void addAttendanceUpdate(int newAttendance) {
-        attendance = newAttendance;
-    }
-
-    boolean isEligible() {
-        return attendance >= 75;
-    }
-
-    // Static because it calculates average for all students.
-    // isEligible() is non-static because it depends on one student.
-    static double classAverage(SrmStudent[] students) {
-        double total = 0;
-
-        for (SrmStudent s : students)
-            total += s.attendance;
-
-        return total / students.length;
-    }
-}
+import java.util.Random;
 
 public class F1 {
+    static String playRound(String playerMove, String computerMove) {
+        if (playerMove.equals(computerMove))
+            return "Draw";
+
+        if ((playerMove.equals("Rock") && computerMove.equals("Scissors")) ||
+            (playerMove.equals("Paper") && computerMove.equals("Rock")) ||
+            (playerMove.equals("Scissors") && computerMove.equals("Paper")))
+            return "Player Wins";
+
+        return "Computer Wins";
+    }
+
     public static void main(String[] args) {
+        String[] moves = {"Rock", "Paper", "Scissors"};
+        String[] playerMoves = {"Rock", "Paper", "Scissors", "Rock", "Paper"};
 
-        SrmStudent[] students = {
-            new SrmStudent("Ravi", "RA01", 82),
-            new SrmStudent("Anitha", "RA02", 68),
-            new SrmStudent("Karthik", "RA03", 91),
-            new SrmStudent("Meera", "RA04", 74),
-            new SrmStudent("Suresh", "RA05", 60)
-        };
+        Random random = new Random();
 
-        for (SrmStudent s : students) {
-            System.out.println(
-                s.name + " - " + s.attendance + "% - " +
-                (s.isEligible() ? "Eligible" : "Detained")
-            );
+        int wins = 0, losses = 0, draws = 0;
+
+        for (int i = 0; i < 5; i++) {
+            String computerMove = moves[random.nextInt(3)];
+            String result = playRound(playerMoves[i], computerMove);
+
+            if (result.equals("Player Wins"))
+                wins++;
+            else if (result.equals("Computer Wins"))
+                losses++;
+            else
+                draws++;
+
+            System.out.println("Round " + (i + 1) +
+                    " | Player: " + playerMoves[i] +
+                    " | Computer: " + computerMove +
+                    " | " + result);
         }
 
-        System.out.println(
-            "Class average: " + SrmStudent.classAverage(students) + "%"
-        );
+        double winPercentage = wins * 100.0 / 5;
+
+        System.out.println("Wins: " + wins +
+                " | Losses: " + losses +
+                " | Draws: " + draws +
+                " | Win % = " + winPercentage + "%");
     }
 }
