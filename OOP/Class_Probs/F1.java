@@ -1,93 +1,74 @@
-class AccessRuleEngine {
+class EventTicket {
+    protected String attendeeId;
+    protected double basePrice;
+    protected double amountPaid;
 
-    static String classifyAccess(String fieldModifier, String accessorContext) {
-
-        if (accessorContext.equals("SAME_CLASS"))
-            return "ALLOWED";
-
-        if (accessorContext.equals("SAME_PACKAGE")) {
-            if (fieldModifier.equals("private"))
-                return "DENIED";
-
-            return "ALLOWED";
+    public EventTicket(String attendeeId, double basePrice) {
+        if (attendeeId == null ||
+            attendeeId.trim().isEmpty() ||
+            attendeeId.trim().length() < 4) {
+            throw new IllegalArgumentException("Invalid attendee ID");
         }
 
-        if (accessorContext.equals("DIFFERENT_PACKAGE")) {
-            if (fieldModifier.equals("public"))
-                return "ALLOWED";
-
-            return "DENIED";
-        }
-
-        return "DENIED";
+        this.attendeeId = attendeeId.trim();
+        this.basePrice = basePrice;
+        this.amountPaid = 0;
     }
 
-    static String summarizeBatch(String[][] attempts) {
-        int allowed = 0;
-        int denied = 0;
+    void pay(double amount) {
+        if (amount > 0)
+            amountPaid += amount;
+    }
 
-        for (String[] attempt : attempts) {
-            String result = classifyAccess(attempt[0], attempt[1]);
+    double getBalanceDue() {
+        return basePrice - amountPaid;
+    }
 
-            if (result.equals("ALLOWED"))
-                allowed++;
-            else
-                denied++;
+    static String registerBatch(String[] attendeeIds, double basePrice) {
+        int registered = 0;
+        int rejected = 0;
+
+        for (String id : attendeeIds) {
+            try {
+                new EventTicket(id, basePrice);
+                registered++;
+            } catch (IllegalArgumentException e) {
+                rejected++;
+            }
         }
 
-        return "Allowed: " + allowed + " | Denied: " + denied;
+        return "Registered: " + registered +
+               " | Rejected: " + rejected;
     }
 }
 
-class PatientRecord {
+class WorkshopTicket extends EventTicket {
+    private String track;
 
-    private String patientId;
-    String wardCode;
-    protected double vitalsScore;
-    public String facilityName;
-
-    public PatientRecord(String patientId,
-                         String wardCode,
-                         double vitalsScore,
-                         String facilityName) {
-
-        if (patientId == null ||
-            patientId.trim().isEmpty() ||
-            patientId.trim().length() < 4) {
-
-            throw new IllegalArgumentException("Invalid patient ID");
-        }
-
-        this.patientId = patientId.trim();
-        this.wardCode = wardCode;
-        this.vitalsScore = vitalsScore;
-        this.facilityName = facilityName;
+    public WorkshopTicket(String attendeeId,
+                          double basePrice,
+                          String track) {
+        super(attendeeId, basePrice);
+        this.track = track;
     }
 }
 
 public class F1 {
     public static void main(String[] args) {
 
-        System.out.println(
-            AccessRuleEngine.classifyAccess(
-                "private", "SAME_CLASS"
-            )
-        );
+        WorkshopTicket w =
+            new WorkshopTicket("STU2", 1200, "AI/ML");
 
-        System.out.println(
-            AccessRuleEngine.classifyAccess(
-                "default", "DIFFERENT_PACKAGE"
-            )
-        );
+        w.pay(500);
 
-        String[][] attempts = {
-            {"protected", "SAME_PACKAGE"},
-            {"protected", "DIFFERENT_PACKAGE"},
-            {"public", "DIFFERENT_PACKAGE"}
+        System.out.println(w.getBalanceDue());
+
+        String[] ids = {
+            "STU1", "ST1", "STU2", " ", "STU3"
         };
 
         System.out.println(
-            AccessRuleEngine.summarizeBatch(attempts)
+            EventTicket.registerBatch(ids, 500)
         );
     }
 }

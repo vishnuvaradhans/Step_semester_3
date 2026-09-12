@@ -1,88 +1,136 @@
-class AccessRuleEngine {
+class EventTicket {
+    protected String attendeeId;
+    protected double basePrice;
+    protected double amountPaid;
 
-    static String classifyAccess(String fieldModifier,
-                                 String accessorContext) {
-
-        if (accessorContext.equals("SAME_CLASS"))
-            return "ALLOWED";
-
-        if (accessorContext.equals("SAME_PACKAGE")) {
-            if (fieldModifier.equals("private"))
-                return "DENIED";
-
-            return "ALLOWED";
-        }
-
-        if (accessorContext.equals("DIFFERENT_PACKAGE")) {
-            if (fieldModifier.equals("public"))
-                return "ALLOWED";
-
-            return "DENIED";
-        }
-
-        if (accessorContext.equals(
-                "SUBCLASS_DIFFERENT_PACKAGE_OWN_TYPE")) {
-
-            if (fieldModifier.equals("public") ||
-                fieldModifier.equals("protected"))
-                return "ALLOWED";
-
-            return "DENIED";
-        }
-
-        if (accessorContext.equals(
-                "SUBCLASS_DIFFERENT_PACKAGE_PARENT_TYPE")) {
-
-            if (fieldModifier.equals("public"))
-                return "ALLOWED";
-
-            return "DENIED";
-        }
-
-        return "DENIED";
+    public EventTicket(String attendeeId, double basePrice) {
+        this.attendeeId = attendeeId;
+        this.basePrice = basePrice;
+        this.amountPaid = 0;
     }
 
-    static String describeContext(String accessorContext) {
+    void pay(double amount) {
+        amountPaid += amount;
+    }
 
-        String[] words = accessorContext.toLowerCase().split("_");
+    double getBalanceDue() {
+        return basePrice - amountPaid;
+    }
 
-        StringBuilder result = new StringBuilder();
+    String printTicket() {
+        return "Standard Event Ticket | Balance Due: " +
+               getBalanceDue();
+    }
+}
 
-        for (String word : words) {
+class WorkshopTicket extends EventTicket {
+    protected String track;
 
-            result.append(
-                Character.toUpperCase(word.charAt(0))
-            );
+    public WorkshopTicket(String attendeeId,
+                          double basePrice,
+                          String track) {
+        super(attendeeId, basePrice);
+        this.track = track;
+    }
 
-            result.append(word.substring(1));
-            result.append(" ");
-        }
+    @Override
+    String printTicket() {
+        return "Workshop Ticket | Track: " + track +
+               " | Balance Due: " + getBalanceDue();
+    }
+}
 
-        return result.toString().trim();
+class PremiumWorkshopTicket extends WorkshopTicket {
+    private double kitFee;
+
+    public PremiumWorkshopTicket(String attendeeId,
+                                 double basePrice,
+                                 String track,
+                                 double kitFee) {
+        super(attendeeId, basePrice, track);
+        this.kitFee = kitFee;
+    }
+
+    @Override
+    String printTicket() {
+        return "Premium Workshop Ticket | Track: " + track +
+               " | Kit Fee: " + kitFee +
+               " | Balance Due: " + getBalanceDue();
+    }
+}
+
+class HackathonTicket extends EventTicket {
+    private String teamName;
+
+    public HackathonTicket(String attendeeId,
+                           double basePrice,
+                           String teamName) {
+        super(attendeeId, basePrice);
+        this.teamName = teamName;
+    }
+
+    @Override
+    String printTicket() {
+        return "Hackathon Ticket | Team: " + teamName +
+               " | Balance Due: " + getBalanceDue();
     }
 }
 
 public class F2 {
+
+    static String classifyGeneration(EventTicket ticket) {
+
+        if (ticket instanceof PremiumWorkshopTicket)
+            return "Multilevel descendant (3 generations deep)";
+
+        if (ticket instanceof HackathonTicket)
+            return "Hierarchical sibling (independent branch)";
+
+        if (ticket instanceof WorkshopTicket)
+            return "Single inheritance child";
+
+        return "Base class";
+    }
+
+    static double getTotalBalanceDue(EventTicket[] tickets) {
+        double total = 0;
+
+        for (EventTicket ticket : tickets)
+            total += ticket.getBalanceDue();
+
+        return total;
+    }
+
     public static void main(String[] args) {
 
-        System.out.println(
-            AccessRuleEngine.classifyAccess(
-                "protected",
-                "SUBCLASS_DIFFERENT_PACKAGE_OWN_TYPE"
-            )
-        );
+        EventTicket standard =
+            new EventTicket("STU1", 500);
 
-        System.out.println(
-            AccessRuleEngine.classifyAccess(
-                "protected",
-                "SUBCLASS_DIFFERENT_PACKAGE_PARENT_TYPE"
-            )
-        );
+        WorkshopTicket workshop =
+            new WorkshopTicket("STU2", 1200, "AI/ML");
 
-        System.out.println(
-            AccessRuleEngine.describeContext(
-                "SUBCLASS_DIFFERENT_PACKAGE_PARENT_TYPE"
-            )
-        );
+        PremiumWorkshopTicket premium =
+            new PremiumWorkshopTicket(
+                "STU3", 2000, "Cloud Native", 300
+            );
+
+        HackathonTicket hackathon =
+            new HackathonTicket(
+                "STU4", 800, "Byte Force"
+            );
+
+        System.out.println(standard.printTicket());
+        System.out.println(workshop.printTicket());
+        System.out.println(premium.printTicket());
+        System.out.println(hackathon.printTicket());
+
+        System.out.println(classifyGeneration(premium));
+        System.out.println(classifyGeneration(hackathon));
+
+        EventTicket[] tickets = {
+            standard, workshop, premium, hackathon
+        };
+
+        System.out.println(getTotalBalanceDue(tickets));
     }
 }

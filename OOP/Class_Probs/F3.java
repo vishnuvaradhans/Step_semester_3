@@ -1,78 +1,78 @@
 import java.util.Arrays;
 
-class PatientVitals {
+class EventTicket {
+    protected double basePrice;
+    protected double amountPaid;
 
-    private double[] readings;
-    private int count;
+    private double[] lateFeeHistory = new double[10];
+    private int lateFeeCount = 0;
 
-    PatientVitals(double[] initialReadings) {
+    public EventTicket(double basePrice) {
+        this.basePrice = basePrice;
+        this.amountPaid = 0;
+    }
 
-        readings = new double[500];
-        count = 0;
+    void pay(double amount) {
+        amountPaid += amount;
+    }
 
-        if (initialReadings != null) {
-            for (double reading : initialReadings)
-                recordReading(reading);
+    double getBalanceDue() {
+        return basePrice - amountPaid;
+    }
+
+    protected void applyLateFee(double amount) {
+        basePrice += amount;
+
+        if (lateFeeCount < lateFeeHistory.length) {
+            lateFeeHistory[lateFeeCount] = amount;
+            lateFeeCount++;
         }
     }
 
-    void recordReading(double reading) {
+    double[] getLateFeeHistory() {
+        return Arrays.copyOf(
+            lateFeeHistory,
+            lateFeeCount
+        );
+    }
+}
 
-        if (reading <= 0 || reading > 45)
-            return;
+class WorkshopTicket extends EventTicket {
 
-        if (count < readings.length) {
-            readings[count] = reading;
-            count++;
-        }
+    public WorkshopTicket(double basePrice) {
+        super(basePrice);
     }
 
-    double getAverage() {
-
-        if (count == 0)
-            return 0;
-
-        double total = 0;
-
-        for (int i = 0; i < count; i++)
-            total += readings[i];
-
-        return total / count;
-    }
-
-    double[] getAllReadings() {
-
-        double[] copy = new double[count];
-
-        for (int i = 0; i < count; i++)
-            copy[i] = readings[i];
-
-        return copy;
+    @Override
+    protected void applyLateFee(double amount) {
+        super.applyLateFee(amount * 2);
     }
 }
 
 public class F3 {
     public static void main(String[] args) {
 
-        PatientVitals v =
-            new PatientVitals(
-                new double[]{36.5, -2, 37.1}
-            );
+        WorkshopTicket w =
+            new WorkshopTicket(1200);
+
+        w.pay(1200);
+        w.applyLateFee(100);
+
+        System.out.println(w.getBalanceDue());
+
+        double[] history =
+            w.getLateFeeHistory();
 
         System.out.println(
-            Arrays.toString(v.getAllReadings())
+            Arrays.toString(history)
         );
 
-        double[] copy = v.getAllReadings();
-
-        copy[0] = 999;
+        history[0] = 999;
 
         System.out.println(
-            v.getAllReadings()[0]
-        );
-
-        System.out.println(
-            "Average: " + v.getAverage()
+            Arrays.toString(
+                w.getLateFeeHistory()
+            )
         );
     }
 }

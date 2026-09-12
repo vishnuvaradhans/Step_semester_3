@@ -1,162 +1,142 @@
-import java.util.Arrays;
+class EventTicket {
 
-class DischargeSummary {
+    private static int ticketCounter = 1000;
 
-    private final String patientId;
-    private final String[] medicationCodes;
+    public final String ticketId;
 
-    public DischargeSummary(String patientId,
-                            String[] medicationCodes) {
+    protected double basePrice;
+    protected double amountPaid;
 
-        if (patientId == null)
-            throw new IllegalArgumentException();
+    public EventTicket(double basePrice) {
+        ticketCounter++;
 
-        if (medicationCodes == null)
-            throw new IllegalArgumentException();
+        ticketId =
+            "TCK-" + ticketCounter;
 
-        for (String code : medicationCodes) {
-
-            if (!isValidMedicationCode(code))
-                throw new IllegalArgumentException(
-                    "Invalid medication code"
-                );
-        }
-
-        this.patientId = patientId;
-        this.medicationCodes = medicationCodes.clone();
+        this.basePrice = basePrice;
+        this.amountPaid = 0;
     }
 
-    private static boolean isValidMedicationCode(String code) {
+    void pay(double amount) {
+        if (amount > 0)
+            amountPaid += amount;
+    }
+
+    void pay(double amount, String mode) {
+        System.out.println(
+            "Payment Mode: " + mode
+        );
+
+        pay(amount);
+    }
+
+    double getBalanceDue() {
+        return basePrice - amountPaid;
+    }
+
+    static boolean isValidPromoCode(String code) {
 
         if (code == null || code.length() != 5)
             return false;
 
-        return code.charAt(0) == 'M' &&
-               code.charAt(1) == 'E' &&
-               code.charAt(2) == 'D' &&
-               code.charAt(3) == '-' &&
-               Character.isUpperCase(code.charAt(4));
-    }
+        if (code.charAt(0) != 'F')
+            return false;
 
-    public String getPatientId() {
-        return patientId;
-    }
+        for (int i = 1; i <= 3; i++) {
+            if (!Character.isDigit(code.charAt(i)))
+                return false;
+        }
 
-    public String[] getMedicationCodes() {
-        return medicationCodes.clone();
-    }
-
-    DischargeSummary withCorrectedMedication(
-            int index,
-            String newCode) {
-
-        if (index < 0 || index >= medicationCodes.length)
-            throw new IllegalArgumentException();
-
-        if (!isValidMedicationCode(newCode))
-            throw new IllegalArgumentException();
-
-        String[] newCodes = medicationCodes.clone();
-
-        newCodes[index] = newCode;
-
-        return new DischargeSummary(
-            patientId,
-            newCodes
+        return Character.isUpperCase(
+            code.charAt(4)
         );
+    }
+
+    static int getTicketsIssued() {
+        return ticketCounter - 1000;
     }
 }
 
-class CriticalCareDischargeSummary
-        extends DischargeSummary {
+class GroupTicket extends EventTicket {
 
-    private final int icuDays;
+    private int groupSize;
 
-    public CriticalCareDischargeSummary(
-            String patientId,
-            String[] medicationCodes,
-            int icuDays) {
-
-        super(patientId, medicationCodes);
-        this.icuDays = icuDays;
-    }
-
-    public int getIcuDays() {
-        return icuDays;
+    public GroupTicket(double basePrice,
+                       int groupSize) {
+        super(basePrice);
+        this.groupSize = groupSize;
     }
 }
 
 public class F5 {
 
-    static String systemName;
-
-    static {
-        systemName = "MediTrack Nightly Ledger";
-    }
-
-    static String processNightlyBatch(
-            DischargeSummary[] summaries) {
+    static String processNightlySettlement(
+            EventTicket[] tickets) {
 
         int processed = 0;
-        int nullSkipped = 0;
-        int critical = 0;
-        int routine = 0;
+        int skipped = 0;
+        int group = 0;
+        int individual = 0;
 
-        for (DischargeSummary summary : summaries) {
+        for (EventTicket ticket : tickets) {
 
-            if (summary == null) {
-                nullSkipped++;
+            if (ticket == null) {
+                skipped++;
                 continue;
             }
 
             processed++;
 
-            if (summary instanceof CriticalCareDischargeSummary)
-                critical++;
+            if (ticket instanceof GroupTicket)
+                group++;
             else
-                routine++;
+                individual++;
         }
 
         return processed + " processed | " +
-               nullSkipped + " null skipped | " +
-               critical + " critical-care | " +
-               routine + " routine";
+               skipped + " null skipped | " +
+               group + " group | " +
+               individual + " individual";
     }
 
     public static void main(String[] args) {
 
-        DischargeSummary d =
-            new DischargeSummary(
-                "MT2026-0142",
-                new String[]{"MED-A", "MED-B"}
-            );
+        EventTicket t1 =
+            new EventTicket(500);
 
-        String[] codes = d.getMedicationCodes();
-
-        codes[0] = "TAMPERED";
+        System.out.println(t1.ticketId);
 
         System.out.println(
-            d.getMedicationCodes()[0]
+            EventTicket.getTicketsIssued()
         );
 
-        DischargeSummary[] summaries = {
+        System.out.println(
+            EventTicket.isValidPromoCode("F123A")
+        );
 
-            new CriticalCareDischargeSummary(
-                "MT001",
-                new String[]{"MED-X"},
-                4
-            ),
+        System.out.println(
+            EventTicket.isValidPromoCode("F12A")
+        );
 
+        System.out.println(
+            EventTicket.isValidPromoCode("X123A")
+        );
+
+        t1.pay(200);
+        t1.pay(200, "UPI");
+
+        System.out.println(
+            t1.getBalanceDue()
+        );
+
+        EventTicket[] tickets = {
+            new GroupTicket(2000, 5),
             null,
-
-            new DischargeSummary(
-                "MT002",
-                new String[]{"MED-Y"}
-            )
+            new EventTicket(500)
         };
 
         System.out.println(
-            processNightlyBatch(summaries)
+            processNightlySettlement(tickets)
         );
     }
 }

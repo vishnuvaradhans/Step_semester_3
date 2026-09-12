@@ -1,88 +1,72 @@
-class PatientProfile {
+class EventTicket {
+    protected double basePrice;
 
-    private String patientId;
-    private String name;
-    private boolean discharged;
-    private String lockerPin;
-
-    public PatientProfile() {
-        this(null, null);
+    public EventTicket(double basePrice) {
+        this.basePrice = basePrice;
     }
 
-    public PatientProfile(String name) {
-        this(null, name);
+    String printTicket() {
+        return "Standard | Balance: " + basePrice;
+    }
+}
+
+class WorkshopTicket extends EventTicket {
+    private String track;
+
+    public WorkshopTicket(double basePrice, String track) {
+        super(basePrice);
+        this.track = track;
     }
 
-    public PatientProfile(String patientId, String name) {
-        this.patientId = patientId;
-        this.name = name;
-        this.discharged = false;
+    String getTrack() {
+        return track;
     }
 
-    public String getPatientId() {
-        return patientId;
-    }
-
-    public void setPatientId(String id) {
-        if (patientId == null)
-            patientId = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public boolean isDischarged() {
-        return discharged;
-    }
-
-    public void setDischarged(boolean discharged) {
-        this.discharged = discharged;
-    }
-
-    public void setLockerPin(String pin) {
-
-        if (pin == null ||
-            pin.length() < 4 ||
-            pin.length() > 6)
-            return;
-
-        for (int i = 0; i < pin.length(); i++) {
-            if (!Character.isDigit(pin.charAt(i)))
-                return;
-        }
-
-        lockerPin = Integer.toString(pin.hashCode());
+    @Override
+    String printTicket() {
+        return "Workshop | Track: " + track +
+               " | Balance: " + basePrice;
     }
 }
 
 public class F4 {
+
+    static String batchPrint(EventTicket[] tickets) {
+
+        StringBuilder result =
+            new StringBuilder();
+
+        for (EventTicket ticket : tickets) {
+
+            result.append(ticket.printTicket());
+
+            if (ticket instanceof WorkshopTicket) {
+                WorkshopTicket w =
+                    (WorkshopTicket) ticket;
+
+                result.append(
+                    " [Track via downcast: "
+                );
+
+                result.append(w.getTrack());
+                result.append("]");
+            }
+
+            result.append(" | ");
+        }
+
+        return result.toString();
+    }
+
     public static void main(String[] args) {
 
-        PatientProfile p1 =
-            new PatientProfile("Arjun Iyer");
+        EventTicket[] tickets = {
+            new EventTicket(500),
+            new WorkshopTicket(1200, "AI/ML")
+        };
 
-        System.out.println(p1.getPatientId());
-
-        PatientProfile p2 =
-            new PatientProfile(
-                "MT2026-0142",
-                "Arjun Iyer"
-            );
-
-        System.out.println(p2.getPatientId());
-
-        PatientProfile p3 = new PatientProfile();
-
-        p3.setPatientId("MT2026-0142");
-        p3.setPatientId("HACKED-0000");
-
-        System.out.println(p3.getPatientId());
-
-        p3.setLockerPin("1234");
+        System.out.println(
+            batchPrint(tickets)
+        );
     }
 }
