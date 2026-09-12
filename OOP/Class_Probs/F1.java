@@ -1,83 +1,93 @@
-import java.util.HashSet;
+class AccessRuleEngine {
 
-class BusTicket {
-    private String passengerName;
-    private String destination;
-    private boolean checkedIn;
+    static String classifyAccess(String fieldModifier, String accessorContext) {
 
-    public BusTicket(String passengerName, String destination) {
-        if (passengerName == null || passengerName.trim().isEmpty())
-            throw new IllegalArgumentException();
+        if (accessorContext.equals("SAME_CLASS"))
+            return "ALLOWED";
 
-        if (destination == null || destination.trim().isEmpty())
-            throw new IllegalArgumentException();
+        if (accessorContext.equals("SAME_PACKAGE")) {
+            if (fieldModifier.equals("private"))
+                return "DENIED";
 
-        for (int i = 0; i < passengerName.length(); i++) {
-            char ch = passengerName.charAt(i);
-
-            if (!Character.isLetter(ch) && ch != ' ')
-                throw new IllegalArgumentException();
+            return "ALLOWED";
         }
 
-        this.passengerName = passengerName.trim();
-        this.destination = destination.trim();
-        this.checkedIn = false;
+        if (accessorContext.equals("DIFFERENT_PACKAGE")) {
+            if (fieldModifier.equals("public"))
+                return "ALLOWED";
+
+            return "DENIED";
+        }
+
+        return "DENIED";
     }
 
-    void markCheckedIn() {
-        if (checkedIn)
-            System.out.println("Ticket already checked in");
-        else {
-            checkedIn = true;
-            System.out.println("Check-in successful");
+    static String summarizeBatch(String[][] attempts) {
+        int allowed = 0;
+        int denied = 0;
+
+        for (String[] attempt : attempts) {
+            String result = classifyAccess(attempt[0], attempt[1]);
+
+            if (result.equals("ALLOWED"))
+                allowed++;
+            else
+                denied++;
         }
+
+        return "Allowed: " + allowed + " | Denied: " + denied;
     }
+}
 
-    static void processBatch(String[][] rawBookings) {
-        int valid = 0, rejected = 0, duplicates = 0;
+class PatientRecord {
 
-        HashSet<String> accepted = new HashSet<>();
+    private String patientId;
+    String wardCode;
+    protected double vitalsScore;
+    public String facilityName;
 
-        for (String[] booking : rawBookings) {
-            try {
-                BusTicket ticket =
-                    new BusTicket(booking[0], booking[1]);
+    public PatientRecord(String patientId,
+                         String wardCode,
+                         double vitalsScore,
+                         String facilityName) {
 
-                String key =
-                    ticket.passengerName.toLowerCase() + "|" +
-                    ticket.destination.toLowerCase();
+        if (patientId == null ||
+            patientId.trim().isEmpty() ||
+            patientId.trim().length() < 4) {
 
-                if (accepted.contains(key))
-                    duplicates++;
-                else {
-                    accepted.add(key);
-                    valid++;
-                }
-
-            } catch (Exception e) {
-                rejected++;
-            }
+            throw new IllegalArgumentException("Invalid patient ID");
         }
 
-        System.out.println(
-            "Valid: " + valid +
-            " | Rejected: " + rejected +
-            " | Duplicates skipped: " + duplicates
-        );
+        this.patientId = patientId.trim();
+        this.wardCode = wardCode;
+        this.vitalsScore = vitalsScore;
+        this.facilityName = facilityName;
     }
 }
 
 public class F1 {
     public static void main(String[] args) {
 
-        String[][] bookings = {
-            {"Divya", "Chennai"},
-            {"", "Bangalore"},
-            {"Ravi123", "Pune"},
-            {"Divya", "Chennai"},
-            {" ", " "}
+        System.out.println(
+            AccessRuleEngine.classifyAccess(
+                "private", "SAME_CLASS"
+            )
+        );
+
+        System.out.println(
+            AccessRuleEngine.classifyAccess(
+                "default", "DIFFERENT_PACKAGE"
+            )
+        );
+
+        String[][] attempts = {
+            {"protected", "SAME_PACKAGE"},
+            {"protected", "DIFFERENT_PACKAGE"},
+            {"public", "DIFFERENT_PACKAGE"}
         };
 
-        BusTicket.processBatch(bookings);
+        System.out.println(
+            AccessRuleEngine.summarizeBatch(attempts)
+        );
     }
 }

@@ -1,52 +1,88 @@
-final class BoardingPenaltyCalculator {
-    private final double minimumPenaltyPercent;
+class PatientProfile {
 
-    public BoardingPenaltyCalculator(double minimumPenaltyPercent) {
-        this.minimumPenaltyPercent = minimumPenaltyPercent;
+    private String patientId;
+    private String name;
+    private boolean discharged;
+    private String lockerPin;
+
+    public PatientProfile() {
+        this(null, null);
     }
 
-    final double calculatePenalty(double ticketFare, int minutesLate) {
+    public PatientProfile(String name) {
+        this(null, name);
+    }
 
-        if (ticketFare < 0 || minutesLate < 0)
-            throw new IllegalArgumentException("Invalid input");
+    public PatientProfile(String patientId, String name) {
+        this.patientId = patientId;
+        this.name = name;
+        this.discharged = false;
+    }
 
-        if (minutesLate == 0)
-            return 0;
+    public String getPatientId() {
+        return patientId;
+    }
 
-        double percent = 0;
+    public void setPatientId(String id) {
+        if (patientId == null)
+            patientId = id;
+    }
 
-        percent += Math.min(minutesLate, 5) * 0.5;
+    public String getName() {
+        return name;
+    }
 
-        if (minutesLate > 5)
-            percent += Math.min(minutesLate - 5, 10) * 1.0;
+    public void setName(String name) {
+        this.name = name;
+    }
 
-        if (minutesLate > 15)
-            percent += (minutesLate - 15) * 2.0;
+    public boolean isDischarged() {
+        return discharged;
+    }
 
-        double tieredPenalty = ticketFare * percent / 100;
-        double minimumPenalty =
-            ticketFare * minimumPenaltyPercent / 100;
+    public void setDischarged(boolean discharged) {
+        this.discharged = discharged;
+    }
 
-        return Math.max(tieredPenalty, minimumPenalty);
+    public void setLockerPin(String pin) {
+
+        if (pin == null ||
+            pin.length() < 4 ||
+            pin.length() > 6)
+            return;
+
+        for (int i = 0; i < pin.length(); i++) {
+            if (!Character.isDigit(pin.charAt(i)))
+                return;
+        }
+
+        lockerPin = Integer.toString(pin.hashCode());
     }
 }
 
 public class F4 {
     public static void main(String[] args) {
 
-        BoardingPenaltyCalculator calculator =
-            new BoardingPenaltyCalculator(1);
+        PatientProfile p1 =
+            new PatientProfile("Arjun Iyer");
 
-        System.out.println(
-            "Rs " + calculator.calculatePenalty(1000, 0)
-        );
+        System.out.println(p1.getPatientId());
 
-        System.out.println(
-            "Rs " + calculator.calculatePenalty(1000, 1)
-        );
+        PatientProfile p2 =
+            new PatientProfile(
+                "MT2026-0142",
+                "Arjun Iyer"
+            );
 
-        System.out.println(
-            "Rs " + calculator.calculatePenalty(1000, 16)
-        );
+        System.out.println(p2.getPatientId());
+
+        PatientProfile p3 = new PatientProfile();
+
+        p3.setPatientId("MT2026-0142");
+        p3.setPatientId("HACKED-0000");
+
+        System.out.println(p3.getPatientId());
+
+        p3.setLockerPin("1234");
     }
 }

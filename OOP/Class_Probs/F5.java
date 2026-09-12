@@ -1,125 +1,162 @@
-class BusTicketAccount {
-    String bookingId;
-    double ticketFare;
+import java.util.Arrays;
 
-    static String depotName;
+class DischargeSummary {
 
-    static {
-        depotName = "Central Bus Depot";
+    private final String patientId;
+    private final String[] medicationCodes;
+
+    public DischargeSummary(String patientId,
+                            String[] medicationCodes) {
+
+        if (patientId == null)
+            throw new IllegalArgumentException();
+
+        if (medicationCodes == null)
+            throw new IllegalArgumentException();
+
+        for (String code : medicationCodes) {
+
+            if (!isValidMedicationCode(code))
+                throw new IllegalArgumentException(
+                    "Invalid medication code"
+                );
+        }
+
+        this.patientId = patientId;
+        this.medicationCodes = medicationCodes.clone();
     }
 
-    public BusTicketAccount(String bookingId, double ticketFare) {
-        this.bookingId = bookingId;
-        this.ticketFare = ticketFare;
+    private static boolean isValidMedicationCode(String code) {
+
+        if (code == null || code.length() != 5)
+            return false;
+
+        return code.charAt(0) == 'M' &&
+               code.charAt(1) == 'E' &&
+               code.charAt(2) == 'D' &&
+               code.charAt(3) == '-' &&
+               Character.isUpperCase(code.charAt(4));
     }
 
-    public BusTicketAccount(String bookingId) {
-        this(bookingId, 0);
+    public String getPatientId() {
+        return patientId;
     }
 
-    final double calculatePenalty(int minutesLate) {
+    public String[] getMedicationCodes() {
+        return medicationCodes.clone();
+    }
 
-        if (minutesLate < 0)
-            throw new IllegalArgumentException("Invalid delay");
+    DischargeSummary withCorrectedMedication(
+            int index,
+            String newCode) {
 
-        if (minutesLate == 0)
-            return 0;
+        if (index < 0 || index >= medicationCodes.length)
+            throw new IllegalArgumentException();
 
-        double percent = 0;
+        if (!isValidMedicationCode(newCode))
+            throw new IllegalArgumentException();
 
-        percent += Math.min(minutesLate, 5) * 0.5;
+        String[] newCodes = medicationCodes.clone();
 
-        if (minutesLate > 5)
-            percent += Math.min(minutesLate - 5, 10);
+        newCodes[index] = newCode;
 
-        if (minutesLate > 15)
-            percent += (minutesLate - 15) * 2.0;
-
-        return ticketFare * percent / 100;
+        return new DischargeSummary(
+            patientId,
+            newCodes
+        );
     }
 }
 
-class Sleeper extends BusTicketAccount {
+class CriticalCareDischargeSummary
+        extends DischargeSummary {
 
-    public Sleeper(String bookingId, double ticketFare) {
-        super(bookingId, ticketFare);
+    private final int icuDays;
+
+    public CriticalCareDischargeSummary(
+            String patientId,
+            String[] medicationCodes,
+            int icuDays) {
+
+        super(patientId, medicationCodes);
+        this.icuDays = icuDays;
+    }
+
+    public int getIcuDays() {
+        return icuDays;
     }
 }
 
 public class F5 {
 
-    static double processAccount(BusTicketAccount account,
-                                 double amount,
-                                 int minutesLate) {
+    static String systemName;
 
-        account.ticketFare = amount;
-
-        double penalty = account.calculatePenalty(minutesLate);
-
-        if (account instanceof Sleeper)
-            penalty *= 0.9;
-
-        return penalty;
+    static {
+        systemName = "MediTrack Nightly Ledger";
     }
 
-    static void processBatch(BusTicketAccount[] accounts,
-                             double[] amounts,
-                             int[] minutesLateArray) {
-
-        if (accounts.length != amounts.length ||
-            accounts.length != minutesLateArray.length) {
-            System.out.println("Invalid batch: array lengths do not match");
-            return;
-        }
+    static String processNightlyBatch(
+            DischargeSummary[] summaries) {
 
         int processed = 0;
         int nullSkipped = 0;
-        int sleeper = 0;
-        int regular = 0;
+        int critical = 0;
+        int routine = 0;
 
-        double grandTotal = 0;
+        for (DischargeSummary summary : summaries) {
 
-        for (int i = 0; i < accounts.length; i++) {
-
-            if (accounts[i] == null) {
+            if (summary == null) {
                 nullSkipped++;
                 continue;
             }
 
-            grandTotal += processAccount(
-                accounts[i],
-                amounts[i],
-                minutesLateArray[i]
-            );
-
             processed++;
 
-            if (accounts[i] instanceof Sleeper)
-                sleeper++;
+            if (summary instanceof CriticalCareDischargeSummary)
+                critical++;
             else
-                regular++;
+                routine++;
         }
 
-        System.out.println(
-            processed + " processed | " +
-            nullSkipped + " null skipped | " +
-            sleeper + " sleeper | " +
-            regular + " regular | " +
-            "grand total penalties = Rs " + grandTotal
-        );
+        return processed + " processed | " +
+               nullSkipped + " null skipped | " +
+               critical + " critical-care | " +
+               routine + " routine";
     }
 
     public static void main(String[] args) {
 
-        BusTicketAccount[] accounts = {
-            new Sleeper("BK001", 2000),
+        DischargeSummary d =
+            new DischargeSummary(
+                "MT2026-0142",
+                new String[]{"MED-A", "MED-B"}
+            );
+
+        String[] codes = d.getMedicationCodes();
+
+        codes[0] = "TAMPERED";
+
+        System.out.println(
+            d.getMedicationCodes()[0]
+        );
+
+        DischargeSummary[] summaries = {
+
+            new CriticalCareDischargeSummary(
+                "MT001",
+                new String[]{"MED-X"},
+                4
+            ),
+
             null,
-            new BusTicketAccount("BK002", 1200)
+
+            new DischargeSummary(
+                "MT002",
+                new String[]{"MED-Y"}
+            )
         };
 
-        double[] amounts = {1200, 900, 700};
-        int[] minutesLate = {10, 5, 0};
-
-        processBatch(accounts, amounts, minutesLate);
+        System.out.println(
+            processNightlyBatch(summaries)
+        );
     }
 }

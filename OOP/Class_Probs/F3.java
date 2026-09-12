@@ -1,67 +1,78 @@
-class BusRoute {
-    String routeCode;
-    String routeName;
-    int priority;
+import java.util.Arrays;
 
-    public BusRoute(String routeCode,
-                    String routeName,
-                    int priority) {
-        this.routeCode = routeCode;
-        this.routeName = routeName;
-        this.priority = priority;
-    }
+class PatientVitals {
 
-    public BusRoute(String routeCode, String routeName) {
-        this(routeCode, routeName, 2);
-    }
+    private double[] readings;
+    private int count;
 
-    int compareTo(BusRoute other) {
+    PatientVitals(double[] initialReadings) {
 
-        if (this.priority != other.priority)
-            return other.priority - this.priority;
+        readings = new double[500];
+        count = 0;
 
-        int codeResult =
-            this.routeCode.compareToIgnoreCase(other.routeCode);
-
-        if (codeResult != 0)
-            return codeResult;
-
-        return Integer.compare(
-            this.routeName.length(),
-            other.routeName.length()
-        );
-    }
-
-    static BusRoute[] rankRoutes(BusRoute[] routes) {
-        BusRoute[] result = routes.clone();
-
-        for (int i = 0; i < result.length - 1; i++) {
-            for (int j = 0; j < result.length - i - 1; j++) {
-
-                if (result[j].compareTo(result[j + 1]) > 0) {
-                    BusRoute temp = result[j];
-                    result[j] = result[j + 1];
-                    result[j + 1] = temp;
-                }
-            }
+        if (initialReadings != null) {
+            for (double reading : initialReadings)
+                recordReading(reading);
         }
+    }
 
-        return result;
+    void recordReading(double reading) {
+
+        if (reading <= 0 || reading > 45)
+            return;
+
+        if (count < readings.length) {
+            readings[count] = reading;
+            count++;
+        }
+    }
+
+    double getAverage() {
+
+        if (count == 0)
+            return 0;
+
+        double total = 0;
+
+        for (int i = 0; i < count; i++)
+            total += readings[i];
+
+        return total / count;
+    }
+
+    double[] getAllReadings() {
+
+        double[] copy = new double[count];
+
+        for (int i = 0; i < count; i++)
+            copy[i] = readings[i];
+
+        return copy;
     }
 }
 
 public class F3 {
     public static void main(String[] args) {
 
-        BusRoute[] routes = {
-            new BusRoute("RT205L", "Airport Express", 3),
-            new BusRoute("rt201j", "City Central", 4),
-            new BusRoute("RT299T", "Night Service")
-        };
+        PatientVitals v =
+            new PatientVitals(
+                new double[]{36.5, -2, 37.1}
+            );
 
-        BusRoute[] ranked = BusRoute.rankRoutes(routes);
+        System.out.println(
+            Arrays.toString(v.getAllReadings())
+        );
 
-        for (BusRoute r : ranked)
-            System.out.println(r.routeCode);
+        double[] copy = v.getAllReadings();
+
+        copy[0] = 999;
+
+        System.out.println(
+            v.getAllReadings()[0]
+        );
+
+        System.out.println(
+            "Average: " + v.getAverage()
+        );
     }
 }

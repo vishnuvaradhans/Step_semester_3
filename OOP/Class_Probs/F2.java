@@ -1,64 +1,88 @@
-import java.util.Arrays;
+class AccessRuleEngine {
 
-class FareSplitter {
-    private String tripId;
-    private double totalFare;
-    private int passengerCount;
+    static String classifyAccess(String fieldModifier,
+                                 String accessorContext) {
 
-    public FareSplitter(String tripId,
-                        double totalFare,
-                        int passengerCount) {
+        if (accessorContext.equals("SAME_CLASS"))
+            return "ALLOWED";
 
-        if (totalFare < 0 || passengerCount <= 0)
-            throw new IllegalArgumentException("Invalid fare split");
+        if (accessorContext.equals("SAME_PACKAGE")) {
+            if (fieldModifier.equals("private"))
+                return "DENIED";
 
-        this.tripId = tripId;
-        this.totalFare = totalFare;
-        this.passengerCount = passengerCount;
-    }
-
-    public FareSplitter(String tripId, double totalFare) {
-        this(tripId, totalFare, 2);
-    }
-
-    public FareSplitter(String tripId) {
-        this(tripId, 0, 2);
-    }
-
-    double[] fareBreakdown() {
-        double[] shares = new double[passengerCount];
-
-        long totalPaise = Math.round(totalFare * 100);
-        long base = totalPaise / passengerCount;
-        long remainder = totalPaise % passengerCount;
-
-        for (int i = 0; i < passengerCount; i++)
-            shares[i] = base / 100.0;
-
-        for (int i = passengerCount - (int)remainder;
-             i < passengerCount; i++) {
-            if (i >= 0)
-                shares[i] += 0.01;
+            return "ALLOWED";
         }
 
-        return shares;
+        if (accessorContext.equals("DIFFERENT_PACKAGE")) {
+            if (fieldModifier.equals("public"))
+                return "ALLOWED";
+
+            return "DENIED";
+        }
+
+        if (accessorContext.equals(
+                "SUBCLASS_DIFFERENT_PACKAGE_OWN_TYPE")) {
+
+            if (fieldModifier.equals("public") ||
+                fieldModifier.equals("protected"))
+                return "ALLOWED";
+
+            return "DENIED";
+        }
+
+        if (accessorContext.equals(
+                "SUBCLASS_DIFFERENT_PACKAGE_PARENT_TYPE")) {
+
+            if (fieldModifier.equals("public"))
+                return "ALLOWED";
+
+            return "DENIED";
+        }
+
+        return "DENIED";
     }
 
-    boolean isConfirmationOverdue(int confirmed, int expected) {
-        return confirmed < expected;
+    static String describeContext(String accessorContext) {
+
+        String[] words = accessorContext.toLowerCase().split("_");
+
+        StringBuilder result = new StringBuilder();
+
+        for (String word : words) {
+
+            result.append(
+                Character.toUpperCase(word.charAt(0))
+            );
+
+            result.append(word.substring(1));
+            result.append(" ");
+        }
+
+        return result.toString().trim();
     }
 }
 
 public class F2 {
     public static void main(String[] args) {
 
-        FareSplitter f1 =
-            new FareSplitter("TRIP001", 100000, 3);
+        System.out.println(
+            AccessRuleEngine.classifyAccess(
+                "protected",
+                "SUBCLASS_DIFFERENT_PACKAGE_OWN_TYPE"
+            )
+        );
 
-        FareSplitter f2 =
-            new FareSplitter("TRIP003");
+        System.out.println(
+            AccessRuleEngine.classifyAccess(
+                "protected",
+                "SUBCLASS_DIFFERENT_PACKAGE_PARENT_TYPE"
+            )
+        );
 
-        System.out.println(Arrays.toString(f1.fareBreakdown()));
-        System.out.println(Arrays.toString(f2.fareBreakdown()));
+        System.out.println(
+            AccessRuleEngine.describeContext(
+                "SUBCLASS_DIFFERENT_PACKAGE_PARENT_TYPE"
+            )
+        );
     }
 }
