@@ -1,33 +1,88 @@
-class DeliverySlot {
-    private String orderId;
-    private String timeSlot;
+class AccessChecker {
 
-    public DeliverySlot(String orderId, String timeSlot) {
-        this.orderId = orderId;
-        this.timeSlot = timeSlot;
+    static String classifyAccess(String fieldModifier,
+                                 String accessorContext) {
+
+        if (accessorContext.equals("SAME_CLASS"))
+            return "ALLOWED";
+
+        if (accessorContext.equals("SAME_PACKAGE")) {
+            if (fieldModifier.equals("private"))
+                return "DENIED";
+
+            return "ALLOWED";
+        }
+
+        if (accessorContext.equals("DIFFERENT_PACKAGE")) {
+            return fieldModifier.equals("public")
+                    ? "ALLOWED"
+                    : "DENIED";
+        }
+
+        if (accessorContext.equals(
+                "SUBCLASS_DIFFERENT_PACKAGE_OWN_TYPE")) {
+
+            if (fieldModifier.equals("public") ||
+                fieldModifier.equals("protected"))
+                return "ALLOWED";
+
+            return "DENIED";
+        }
+
+        if (accessorContext.equals(
+                "SUBCLASS_DIFFERENT_PACKAGE_PARENT_TYPE")) {
+
+            return fieldModifier.equals("public")
+                    ? "ALLOWED"
+                    : "DENIED";
+        }
+
+        return "DENIED";
     }
 
-    public DeliverySlot(String orderId) {
-        this(orderId, "ASAP");
-    }
+    static String describeContext(String accessorContext) {
 
-    boolean isPeakHour() {
-        return timeSlot.equals("12:00-13:00") ||
-               timeSlot.equals("13:00-14:00") ||
-               timeSlot.equals("19:00-20:00") ||
-               timeSlot.equals("20:00-21:00");
+        String[] words =
+            accessorContext.toLowerCase().split("_");
+
+        StringBuilder result = new StringBuilder();
+
+        for (String word : words) {
+
+            result.append(
+                Character.toUpperCase(word.charAt(0))
+            );
+
+            result.append(word.substring(1));
+            result.append(" ");
+        }
+
+        return result.toString().trim();
     }
 }
 
 public class F2 {
+
     public static void main(String[] args) {
-        DeliverySlot d1 =
-            new DeliverySlot("ORD101", "13:00-14:00");
 
-        DeliverySlot d2 =
-            new DeliverySlot("ORD102");
+        System.out.println(
+            AccessChecker.classifyAccess(
+                "protected",
+                "SUBCLASS_DIFFERENT_PACKAGE_OWN_TYPE"
+            )
+        );
 
-        System.out.println(d1.isPeakHour());
-        System.out.println(d2.isPeakHour());
+        System.out.println(
+            AccessChecker.classifyAccess(
+                "protected",
+                "SUBCLASS_DIFFERENT_PACKAGE_PARENT_TYPE"
+            )
+        );
+
+        System.out.println(
+            AccessChecker.describeContext(
+                "SUBCLASS_DIFFERENT_PACKAGE_OWN_TYPE"
+            )
+        );
     }
 }

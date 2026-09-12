@@ -1,121 +1,177 @@
-class DeliveryAccount {
-    String studentId;
-    double orderValue;
+class LoanReceipt {
 
-    static String systemName;
+    /*
+     * The sheet also asks for ReferenceOnlyLoanReceipt
+     * to extend LoanReceipt, so LoanReceipt cannot be
+     * declared final in compilable Java.
+     */
 
-    static {
-        systemName = "Campus Delivery System";
+    private final String memberId;
+    private final String[] bookIds;
+
+    public LoanReceipt(String memberId,
+                       String[] bookIds) {
+
+        if (memberId == null || bookIds == null)
+            throw new IllegalArgumentException();
+
+        for (String id : bookIds) {
+
+            if (!isValidBookId(id))
+                throw new IllegalArgumentException(
+                    "Invalid book ID"
+                );
+        }
+
+        this.memberId = memberId;
+        this.bookIds = bookIds.clone();
     }
 
-    public DeliveryAccount(String studentId, double orderValue) {
-        this.studentId = studentId;
-        this.orderValue = orderValue;
+    private static boolean isValidBookId(String id) {
+
+        if (id == null || id.length() != 6)
+            return false;
+
+        if (id.charAt(0) != 'B' ||
+            id.charAt(1) != 'K' ||
+            id.charAt(2) != '-')
+            return false;
+
+        for (int i = 3; i < 6; i++) {
+            if (!Character.isDigit(id.charAt(i)))
+                return false;
+        }
+
+        return true;
     }
 
-    public DeliveryAccount(String studentId) {
-        this(studentId, 0);
+    public String getMemberId() {
+        return memberId;
     }
 
-    final double calculateSurgeFee(int delayMinutes) {
-        if (delayMinutes < 0)
-            throw new IllegalArgumentException("Invalid delay");
+    public String[] getBookIds() {
+        return bookIds.clone();
+    }
 
-        if (delayMinutes == 0)
-            return 0;
+    LoanReceipt withCorrectedBookId(
+            int index,
+            String newId) {
 
-        double percent = 0;
+        if (index < 0 ||
+            index >= bookIds.length ||
+            !isValidBookId(newId)) {
 
-        percent += Math.min(delayMinutes, 5) * 0.5;
+            throw new IllegalArgumentException();
+        }
 
-        if (delayMinutes > 5)
-            percent += Math.min(delayMinutes - 5, 10) * 1.0;
+        String[] newIds = bookIds.clone();
 
-        if (delayMinutes > 15)
-            percent += (delayMinutes - 15) * 2.0;
+        newIds[index] = newId;
 
-        return orderValue * percent / 100;
+        return new LoanReceipt(
+            memberId,
+            newIds
+        );
     }
 }
 
-class Premium extends DeliveryAccount {
+class ReferenceOnlyLoanReceipt
+        extends LoanReceipt {
 
-    public Premium(String studentId, double orderValue) {
-        super(studentId, orderValue);
+    private final String roomNumber;
+
+    public ReferenceOnlyLoanReceipt(
+            String memberId,
+            String[] bookIds,
+            String roomNumber) {
+
+        super(memberId, bookIds);
+
+        this.roomNumber = roomNumber;
+    }
+
+    public String getRoomNumber() {
+        return roomNumber;
     }
 }
 
 public class F5 {
 
-    static void processAccount(DeliveryAccount account,
-                               double amount,
-                               int delayMinutes) {
-        account.orderValue = amount;
-        account.calculateSurgeFee(delayMinutes);
+    static String ledgerName;
+
+    static {
+        ledgerName =
+            "PageTurner Nightly Circulation Ledger";
     }
 
-    static void processBatch(DeliveryAccount[] accounts,
-                             double[] amounts,
-                             int[] delayMinutesArray) {
-
-        if (accounts.length != amounts.length ||
-            accounts.length != delayMinutesArray.length) {
-            System.out.println("Invalid batch: array lengths do not match");
-            return;
-        }
+    static String processNightlyCirculation(
+            LoanReceipt[] receipts) {
 
         int processed = 0;
         int skipped = 0;
-        int premium = 0;
+        int referenceOnly = 0;
         int regular = 0;
 
-        double grandTotal = 0;
+        for (LoanReceipt receipt : receipts) {
 
-        for (int i = 0; i < accounts.length; i++) {
-
-            if (accounts[i] == null) {
+            if (receipt == null) {
                 skipped++;
                 continue;
             }
 
-            processAccount(
-                accounts[i],
-                amounts[i],
-                delayMinutesArray[i]
-            );
-
-            double fee =
-                accounts[i].calculateSurgeFee(delayMinutesArray[i]);
-
-            grandTotal += fee;
             processed++;
 
-            if (accounts[i] instanceof Premium)
-                premium++;
+            if (receipt
+                    instanceof ReferenceOnlyLoanReceipt)
+                referenceOnly++;
             else
                 regular++;
         }
 
-        System.out.println(
-            processed + " processed | " +
-            skipped + " null skipped | " +
-            premium + " premium | " +
-            regular + " regular | grand total surge fees = Rs " +
-            grandTotal
-        );
+        return processed + " processed | " +
+               skipped + " null skipped | " +
+               referenceOnly +
+               " reference-only | " +
+               regular + " regular";
     }
 
     public static void main(String[] args) {
 
-        DeliveryAccount[] accounts = {
-            new Premium("STU001", 500),
+        LoanReceipt r =
+            new LoanReceipt(
+                "LIB-8841",
+                new String[]{
+                    "BK-100",
+                    "BK-101"
+                }
+            );
+
+        String[] ids = r.getBookIds();
+
+        ids[0] = "HACKED";
+
+        System.out.println(
+            r.getBookIds()[0]
+        );
+
+        LoanReceipt[] receipts = {
+
+            new ReferenceOnlyLoanReceipt(
+                "LIB-001",
+                new String[]{"BK-200"},
+                "Reading Room 3"
+            ),
+
             null,
-            new DeliveryAccount("STU002", 300)
+
+            new LoanReceipt(
+                "LIB-002",
+                new String[]{"BK-201"}
+            )
         };
 
-        double[] amounts = {500, 400, 300};
-        int[] delays = {10, 5, 0};
-
-        processBatch(accounts, amounts, delays);
+        System.out.println(
+            processNightlyCirculation(receipts)
+        );
     }
 }

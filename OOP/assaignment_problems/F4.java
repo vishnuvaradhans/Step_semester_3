@@ -1,51 +1,91 @@
-final class SurgeFeeCalculator {
-    private final double minimumSurgePercent;
+class LibraryMember {
 
-    public SurgeFeeCalculator(double minimumSurgePercent) {
-        this.minimumSurgePercent = minimumSurgePercent;
+    private String membershipId;
+    private String name;
+    private boolean premiumMember;
+    private String securityAnswer;
+
+    public LibraryMember() {
+        this(null, null);
     }
 
-    final double calculateSurgeFee(double orderValue, int delayMinutes) {
-        if (orderValue < 0 || delayMinutes < 0)
-            throw new IllegalArgumentException("Invalid input");
+    public LibraryMember(String name) {
+        this(null, name);
+    }
 
-        if (delayMinutes == 0)
-            return 0;
+    public LibraryMember(String membershipId,
+                         String name) {
 
-        double surgePercent = 0;
+        this.membershipId = membershipId;
+        this.name = name;
+        this.premiumMember = false;
+    }
 
-        int first = Math.min(delayMinutes, 5);
-        surgePercent += first * 0.5;
+    public String getMembershipId() {
+        return membershipId;
+    }
 
-        if (delayMinutes > 5) {
-            int second = Math.min(delayMinutes - 5, 10);
-            surgePercent += second * 1.0;
-        }
+    public void setMembershipId(String id) {
 
-        if (delayMinutes > 15) {
-            int third = delayMinutes - 15;
-            surgePercent += third * 2.0;
-        }
+        if (membershipId == null)
+            membershipId = id;
+    }
 
-        double tieredFee = orderValue * surgePercent / 100;
-        double minimumFee = orderValue * minimumSurgePercent / 100;
+    public String getName() {
+        return name;
+    }
 
-        return Math.max(tieredFee, minimumFee);
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public boolean isPremiumMember() {
+        return premiumMember;
+    }
+
+    public void setPremiumMember(boolean premium) {
+        this.premiumMember = premium;
+    }
+
+    public void setSecurityAnswer(String answer) {
+
+        if (answer != null)
+            securityAnswer =
+                Integer.toString(answer.hashCode());
     }
 }
 
 public class F4 {
+
     public static void main(String[] args) {
-        SurgeFeeCalculator calculator =
-            new SurgeFeeCalculator(1);
 
-        System.out.println("Rs " +
-            calculator.calculateSurgeFee(500, 0));
+        LibraryMember m1 =
+            new LibraryMember("Priya Nair");
 
-        System.out.println("Rs " +
-            calculator.calculateSurgeFee(500, 1));
+        System.out.println(
+            m1.getMembershipId()
+        );
 
-        System.out.println("Rs " +
-            calculator.calculateSurgeFee(500, 16));
+        LibraryMember m2 =
+            new LibraryMember(
+                "LIB-8841",
+                "Priya Nair"
+            );
+
+        System.out.println(
+            m2.getMembershipId()
+        );
+
+        LibraryMember m3 =
+            new LibraryMember();
+
+        m3.setMembershipId("LIB-8841");
+        m3.setMembershipId("FAKE-0000");
+
+        System.out.println(
+            m3.getMembershipId()
+        );
+
+        m3.setSecurityAnswer("Blue");
     }
 }

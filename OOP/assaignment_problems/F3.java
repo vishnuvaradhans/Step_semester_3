@@ -1,62 +1,59 @@
-class Canteen {
-    String canteenCode;
-    String canteenName;
-    int trustScore;
+class BookInventory {
 
-    public Canteen(String canteenCode,
-                   String canteenName,
-                   int trustScore) {
-        this.canteenCode = canteenCode;
-        this.canteenName = canteenName;
-        this.trustScore = trustScore;
+    private int copiesTotal;
+    private int copiesAvailable;
+
+    BookInventory(int copiesTotal) {
+
+        if (copiesTotal <= 0)
+            throw new IllegalArgumentException(
+                "Invalid total copies"
+            );
+
+        this.copiesTotal = copiesTotal;
+        this.copiesAvailable = copiesTotal;
     }
 
-    public Canteen(String canteenCode, String canteenName) {
-        this(canteenCode, canteenName, 3);
+    void checkOut() {
+
+        if (copiesAvailable > 0)
+            copiesAvailable--;
     }
 
-    int compareTo(Canteen other) {
-        if (this.trustScore != other.trustScore)
-            return other.trustScore - this.trustScore;
+    void checkIn() {
 
-        int codeCompare =
-            this.canteenCode.compareToIgnoreCase(other.canteenCode);
-
-        if (codeCompare != 0)
-            return codeCompare;
-
-        return this.canteenName.length() - other.canteenName.length();
+        if (copiesAvailable < copiesTotal)
+            copiesAvailable++;
     }
 
-    static Canteen[] rankCanteens(Canteen[] canteens) {
-        Canteen[] result = canteens.clone();
-
-        for (int i = 0; i < result.length - 1; i++) {
-            for (int j = 0; j < result.length - 1 - i; j++) {
-
-                if (result[j].compareTo(result[j + 1]) > 0) {
-                    Canteen temp = result[j];
-                    result[j] = result[j + 1];
-                    result[j + 1] = temp;
-                }
-            }
-        }
-
-        return result;
+    int getCopiesAvailable() {
+        return copiesAvailable;
     }
 }
 
 public class F3 {
+
     public static void main(String[] args) {
-        Canteen[] canteens = {
-            new Canteen("HB3-C", "Spice Junction", 3),
-            new Canteen("hb1-c", "Grand Mess", 5),
-            new Canteen("HB2-C", "Southern Treats")
-        };
 
-        Canteen[] ranked = Canteen.rankCanteens(canteens);
+        BookInventory b =
+            new BookInventory(3);
 
-        for (Canteen c : ranked)
-            System.out.println(c.canteenCode);
+        b.checkOut();
+        b.checkOut();
+        b.checkOut();
+        b.checkOut();
+
+        System.out.println(
+            b.getCopiesAvailable()
+        );
+
+        b.checkIn();
+        b.checkIn();
+        b.checkIn();
+        b.checkIn();
+
+        System.out.println(
+            b.getCopiesAvailable()
+        );
     }
 }
