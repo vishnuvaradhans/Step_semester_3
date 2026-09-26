@@ -1,88 +1,110 @@
-class AccessRuleEngine {
+interface Alertable {
+    String sendAlert(String message);
+}
 
-    static String classifyAccess(String fieldModifier,
-                                 String accessorContext) {
+class SecuritySensor {
 
-        if (accessorContext.equals("SAME_CLASS"))
-            return "ALLOWED";
+    private String zoneName;
 
-        if (accessorContext.equals("SAME_PACKAGE")) {
-            if (fieldModifier.equals("private"))
-                return "DENIED";
-
-            return "ALLOWED";
-        }
-
-        if (accessorContext.equals("DIFFERENT_PACKAGE")) {
-            if (fieldModifier.equals("public"))
-                return "ALLOWED";
-
-            return "DENIED";
-        }
-
-        if (accessorContext.equals(
-                "SUBCLASS_DIFFERENT_PACKAGE_OWN_TYPE")) {
-
-            if (fieldModifier.equals("public") ||
-                fieldModifier.equals("protected"))
-                return "ALLOWED";
-
-            return "DENIED";
-        }
-
-        if (accessorContext.equals(
-                "SUBCLASS_DIFFERENT_PACKAGE_PARENT_TYPE")) {
-
-            if (fieldModifier.equals("public"))
-                return "ALLOWED";
-
-            return "DENIED";
-        }
-
-        return "DENIED";
+    public SecuritySensor(String zoneName) {
+        this.zoneName = zoneName;
     }
 
-    static String describeContext(String accessorContext) {
+    public String getZoneName() {
+        return zoneName;
+    }
+}
 
-        String[] words = accessorContext.toLowerCase().split("_");
+class MotionSensor extends SecuritySensor
+        implements Alertable {
 
-        StringBuilder result = new StringBuilder();
+    public MotionSensor(String zoneName) {
+        super(zoneName);
+    }
 
-        for (String word : words) {
+    @Override
+    public String sendAlert(String message) {
+        return "[" + getZoneName() + "] " + message;
+    }
+}
 
-            result.append(
-                Character.toUpperCase(word.charAt(0))
-            );
+class DualZoneMotionSensor extends MotionSensor {
 
-            result.append(word.substring(1));
-            result.append(" ");
-        }
+    private String secondZoneName;
 
-        return result.toString().trim();
+    public DualZoneMotionSensor(
+            String zoneName,
+            String secondZoneName) {
+
+        super(zoneName);
+        this.secondZoneName = secondZoneName;
+    }
+
+    @Override
+    public String sendAlert(String message) {
+        return super.sendAlert(message)
+                + " [also covering " + secondZoneName + "]";
+    }
+}
+
+class SmokeDetector implements Alertable {
+
+    private String deviceId;
+
+    public SmokeDetector(String deviceId) {
+        this.deviceId = deviceId;
+    }
+
+    @Override
+    public String sendAlert(String message) {
+        return "[" + deviceId + "] " + message;
     }
 }
 
 public class F2 {
+
+    static void broadcastAll(
+            Alertable[] devices,
+            String message) {
+
+        for (Alertable device : devices) {
+            System.out.println(device.sendAlert(message));
+        }
+    }
+
+    static String getZoneIfMotionSensor(Alertable a) {
+
+        if (a instanceof MotionSensor) {
+
+            MotionSensor m = (MotionSensor) a;
+
+            return m.getZoneName();
+        }
+
+        return "Not a motion sensor";
+    }
+
     public static void main(String[] args) {
 
-        System.out.println(
-            AccessRuleEngine.classifyAccess(
-                "protected",
-                "SUBCLASS_DIFFERENT_PACKAGE_OWN_TYPE"
-            )
-        );
+        MotionSensor m =
+                new MotionSensor("Living Room");
 
-        System.out.println(
-            AccessRuleEngine.classifyAccess(
-                "protected",
-                "SUBCLASS_DIFFERENT_PACKAGE_PARENT_TYPE"
-            )
-        );
+        DualZoneMotionSensor d =
+                new DualZoneMotionSensor(
+                        "Hallway", "Stairwell");
 
-        System.out.println(
-            AccessRuleEngine.describeContext(
-                "SUBCLASS_DIFFERENT_PACKAGE_PARENT_TYPE"
-            )
-        );
+        SmokeDetector s =
+                new SmokeDetector("SD-01");
+
+        System.out.println(m.sendAlert("Motion detected"));
+        System.out.println(d.sendAlert("Motion detected"));
+        System.out.println(s.sendAlert("Smoke detected"));
+
+        System.out.println(getZoneIfMotionSensor(m));
+        System.out.println(getZoneIfMotionSensor(s));
+
+        broadcastAll(
+                new Alertable[]{m, d, s},
+                "Alert detected");
     }
 }

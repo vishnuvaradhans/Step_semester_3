@@ -1,93 +1,75 @@
-class AccessRuleEngine {
+abstract class PaymentMethod {
 
-    static String classifyAccess(String fieldModifier, String accessorContext) {
+    private static int count = 1000;
+    private final String transactionId;
 
-        if (accessorContext.equals("SAME_CLASS"))
-            return "ALLOWED";
-
-        if (accessorContext.equals("SAME_PACKAGE")) {
-            if (fieldModifier.equals("private"))
-                return "DENIED";
-
-            return "ALLOWED";
-        }
-
-        if (accessorContext.equals("DIFFERENT_PACKAGE")) {
-            if (fieldModifier.equals("public"))
-                return "ALLOWED";
-
-            return "DENIED";
-        }
-
-        return "DENIED";
+    PaymentMethod() {
+        count++;
+        transactionId = "TXN-" + count;
     }
 
-    static String summarizeBatch(String[][] attempts) {
-        int allowed = 0;
-        int denied = 0;
+    public abstract String processPayment(double amount);
 
-        for (String[] attempt : attempts) {
-            String result = classifyAccess(attempt[0], attempt[1]);
+    String processPayment(double amount, String note) {
+        return processPayment(amount) + " (" + note + ")";
+    }
 
-            if (result.equals("ALLOWED"))
-                allowed++;
-            else
-                denied++;
-        }
-
-        return "Allowed: " + allowed + " | Denied: " + denied;
+    public String getTransactionId() {
+        return transactionId;
     }
 }
 
-class PatientRecord {
+class CreditCardPayment extends PaymentMethod {
 
-    private String patientId;
-    String wardCode;
-    protected double vitalsScore;
-    public String facilityName;
+    private String cardNumberLastFour;
 
-    public PatientRecord(String patientId,
-                         String wardCode,
-                         double vitalsScore,
-                         String facilityName) {
+    public CreditCardPayment(String cardNumberLastFour) {
+        this.cardNumberLastFour = cardNumberLastFour;
+    }
 
-        if (patientId == null ||
-            patientId.trim().isEmpty() ||
-            patientId.trim().length() < 4) {
+    @Override
+    public String processPayment(double amount) {
+        return "Charged $" + amount + " to card ending "
+                + cardNumberLastFour + " - Txn "
+                + getTransactionId();
+    }
+}
 
-            throw new IllegalArgumentException("Invalid patient ID");
-        }
+class CashPayment extends PaymentMethod {
 
-        this.patientId = patientId.trim();
-        this.wardCode = wardCode;
-        this.vitalsScore = vitalsScore;
-        this.facilityName = facilityName;
+    public CashPayment() {
+    }
+
+    @Override
+    public String processPayment(double amount) {
+        return "Received $" + amount + " in cash - Txn "
+                + getTransactionId();
     }
 }
 
 public class F1 {
+
+    static void printConfirmation(PaymentMethod payment, double amount) {
+        System.out.println(payment.processPayment(amount));
+    }
+
+    static void test() {
+        CreditCardPayment cc = new CreditCardPayment("4471");
+
+        PaymentMethod ref = cc; // upcasting
+
+        printConfirmation(ref, 250.0);
+    }
+
     public static void main(String[] args) {
 
-        System.out.println(
-            AccessRuleEngine.classifyAccess(
-                "private", "SAME_CLASS"
-            )
-        );
+        CreditCardPayment cc = new CreditCardPayment("4471");
+        CashPayment cash = new CashPayment();
 
-        System.out.println(
-            AccessRuleEngine.classifyAccess(
-                "default", "DIFFERENT_PACKAGE"
-            )
-        );
+        System.out.println(cc.processPayment(250.0));
+        System.out.println(cc.processPayment(250.0, "Birthday gift"));
+        System.out.println(cash.processPayment(40.0));
 
-        String[][] attempts = {
-            {"protected", "SAME_PACKAGE"},
-            {"protected", "DIFFERENT_PACKAGE"},
-            {"public", "DIFFERENT_PACKAGE"}
-        };
-
-        System.out.println(
-            AccessRuleEngine.summarizeBatch(attempts)
-        );
+        test();
     }
 }

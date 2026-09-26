@@ -1,162 +1,133 @@
-import java.util.Arrays;
+abstract class LibraryItem {
 
-class DischargeSummary {
+    private static int count = 1000;
+    private final String itemId;
 
-    private final String patientId;
-    private final String[] medicationCodes;
-
-    public DischargeSummary(String patientId,
-                            String[] medicationCodes) {
-
-        if (patientId == null)
-            throw new IllegalArgumentException();
-
-        if (medicationCodes == null)
-            throw new IllegalArgumentException();
-
-        for (String code : medicationCodes) {
-
-            if (!isValidMedicationCode(code))
-                throw new IllegalArgumentException(
-                    "Invalid medication code"
-                );
-        }
-
-        this.patientId = patientId;
-        this.medicationCodes = medicationCodes.clone();
+    LibraryItem() {
+        count++;
+        itemId = "LIB-" + count;
     }
 
-    private static boolean isValidMedicationCode(String code) {
+    public abstract int getLoanPeriodDays();
 
-        if (code == null || code.length() != 5)
-            return false;
-
-        return code.charAt(0) == 'M' &&
-               code.charAt(1) == 'E' &&
-               code.charAt(2) == 'D' &&
-               code.charAt(3) == '-' &&
-               Character.isUpperCase(code.charAt(4));
-    }
-
-    public String getPatientId() {
-        return patientId;
-    }
-
-    public String[] getMedicationCodes() {
-        return medicationCodes.clone();
-    }
-
-    DischargeSummary withCorrectedMedication(
-            int index,
-            String newCode) {
-
-        if (index < 0 || index >= medicationCodes.length)
-            throw new IllegalArgumentException();
-
-        if (!isValidMedicationCode(newCode))
-            throw new IllegalArgumentException();
-
-        String[] newCodes = medicationCodes.clone();
-
-        newCodes[index] = newCode;
-
-        return new DischargeSummary(
-            patientId,
-            newCodes
-        );
+    String getItemId() {
+        return itemId;
     }
 }
 
-class CriticalCareDischargeSummary
-        extends DischargeSummary {
+interface Renewable {
+    String renew();
+}
 
-    private final int icuDays;
+interface Reservable {
+    String reserve();
+}
 
-    public CriticalCareDischargeSummary(
-            String patientId,
-            String[] medicationCodes,
-            int icuDays) {
+class Textbook extends LibraryItem
+        implements Renewable, Reservable {
 
-        super(patientId, medicationCodes);
-        this.icuDays = icuDays;
+    private String title;
+
+    public Textbook(String title) {
+        this.title = title;
     }
 
-    public int getIcuDays() {
-        return icuDays;
+    @Override
+    public int getLoanPeriodDays() {
+        return 14;
+    }
+
+    @Override
+    public String renew() {
+        return title + " renewed";
+    }
+
+    @Override
+    public String reserve() {
+        return title + " reserved";
+    }
+}
+
+class Magazine extends LibraryItem
+        implements Renewable {
+
+    private String title;
+
+    public Magazine(String title) {
+        this.title = title;
+    }
+
+    @Override
+    public int getLoanPeriodDays() {
+        return 7;
+    }
+
+    @Override
+    public String renew() {
+        return title + " renewed";
+    }
+}
+
+class DigitalPass implements Renewable {
+
+    private String resourceName;
+
+    public DigitalPass(String resourceName) {
+        this.resourceName = resourceName;
+    }
+
+    @Override
+    public String renew() {
+        return resourceName + " renewed";
     }
 }
 
 public class F5 {
 
-    static String systemName;
+    static void processCheckouts(LibraryItem[] items) {
 
-    static {
-        systemName = "MediTrack Nightly Ledger";
+        for (LibraryItem item : items) {
+            System.out.println(item.getLoanPeriodDays());
+        }
     }
 
-    static String processNightlyBatch(
-            DischargeSummary[] summaries) {
+    static String reserveIfSupported(Object o) {
 
-        int processed = 0;
-        int nullSkipped = 0;
-        int critical = 0;
-        int routine = 0;
+        if (o instanceof Reservable) {
 
-        for (DischargeSummary summary : summaries) {
+            Reservable r = (Reservable) o;
 
-            if (summary == null) {
-                nullSkipped++;
-                continue;
-            }
-
-            processed++;
-
-            if (summary instanceof CriticalCareDischargeSummary)
-                critical++;
-            else
-                routine++;
+            return r.reserve();
         }
 
-        return processed + " processed | " +
-               nullSkipped + " null skipped | " +
-               critical + " critical-care | " +
-               routine + " routine";
+        return "Reservation not supported";
     }
 
     public static void main(String[] args) {
 
-        DischargeSummary d =
-            new DischargeSummary(
-                "MT2026-0142",
-                new String[]{"MED-A", "MED-B"}
-            );
+        Textbook t =
+                new Textbook("Java Fundamentals");
 
-        String[] codes = d.getMedicationCodes();
+        System.out.println(t.getLoanPeriodDays());
+        System.out.println(t.renew());
+        System.out.println(t.reserve());
 
-        codes[0] = "TAMPERED";
+        Magazine m =
+                new Magazine("Tech Monthly");
 
-        System.out.println(
-            d.getMedicationCodes()[0]
-        );
+        System.out.println(reserveIfSupported(m));
 
-        DischargeSummary[] summaries = {
+        DigitalPass d =
+                new DigitalPass("E-Journal Access");
 
-            new CriticalCareDischargeSummary(
-                "MT001",
-                new String[]{"MED-X"},
-                4
-            ),
+        System.out.println(reserveIfSupported(d));
 
-            null,
+        LibraryItem ref = t; // upcasting
 
-            new DischargeSummary(
-                "MT002",
-                new String[]{"MED-Y"}
-            )
-        };
+        System.out.println(reserveIfSupported(ref));
 
-        System.out.println(
-            processNightlyBatch(summaries)
+        processCheckouts(
+                new LibraryItem[]{t, m}
         );
     }
 }

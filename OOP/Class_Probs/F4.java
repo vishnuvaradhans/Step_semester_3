@@ -1,88 +1,126 @@
-class PatientProfile {
+interface Playable {
 
-    private String patientId;
-    private String name;
-    private boolean discharged;
-    private String lockerPin;
+    String play();
 
-    public PatientProfile() {
-        this(null, null);
+    String play(int fromSecond);
+
+    String pause();
+}
+
+abstract class MediaFile {
+
+    private static int count = 1000;
+    private final String fileId;
+
+    MediaFile() {
+        count++;
+        fileId = "MF-" + count;
     }
 
-    public PatientProfile(String name) {
-        this(null, name);
+    public abstract String getFormatInfo();
+
+    String getFileId() {
+        return fileId;
+    }
+}
+
+class AudioFile extends MediaFile
+        implements Playable {
+
+    private String title;
+
+    public AudioFile(String title) {
+        this.title = title;
     }
 
-    public PatientProfile(String patientId, String name) {
-        this.patientId = patientId;
-        this.name = name;
-        this.discharged = false;
+    @Override
+    public String play() {
+        return "Playing audio: " + title;
     }
 
-    public String getPatientId() {
-        return patientId;
+    @Override
+    public String play(int fromSecond) {
+
+        int minutes = fromSecond / 60;
+        int seconds = fromSecond % 60;
+
+        return "Playing audio: " + title
+                + " from "
+                + minutes + ":"
+                + String.format("%02d", seconds);
     }
 
-    public void setPatientId(String id) {
-        if (patientId == null)
-            patientId = id;
+    @Override
+    public String pause() {
+        return "Audio paused";
     }
 
-    public String getName() {
-        return name;
+    @Override
+    public String getFormatInfo() {
+        return "Audio file, ID: " + getFileId();
+    }
+}
+
+class Podcast implements Playable {
+
+    private String showName;
+    private int episodeNumber;
+
+    public Podcast(String showName, int episodeNumber) {
+        this.showName = showName;
+        this.episodeNumber = episodeNumber;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    @Override
+    public String play() {
+        return "Streaming episode "
+                + episodeNumber + " of "
+                + showName;
     }
 
-    public boolean isDischarged() {
-        return discharged;
+    @Override
+    public String play(int fromSecond) {
+        return "Streaming episode "
+                + episodeNumber + " of "
+                + showName + " from "
+                + fromSecond + " seconds";
     }
 
-    public void setDischarged(boolean discharged) {
-        this.discharged = discharged;
-    }
-
-    public void setLockerPin(String pin) {
-
-        if (pin == null ||
-            pin.length() < 4 ||
-            pin.length() > 6)
-            return;
-
-        for (int i = 0; i < pin.length(); i++) {
-            if (!Character.isDigit(pin.charAt(i)))
-                return;
-        }
-
-        lockerPin = Integer.toString(pin.hashCode());
+    @Override
+    public String pause() {
+        return "Podcast paused";
     }
 }
 
 public class F4 {
+
+    static void launchAll(Playable[] items) {
+
+        for (Playable item : items) {
+            System.out.println(item.play());
+        }
+    }
+
     public static void main(String[] args) {
 
-        PatientProfile p1 =
-            new PatientProfile("Arjun Iyer");
+        AudioFile a =
+                new AudioFile("Morning Jazz");
 
-        System.out.println(p1.getPatientId());
+        System.out.println(a.play());
+        System.out.println(a.play(30));
+        System.out.println(a.getFormatInfo());
 
-        PatientProfile p2 =
-            new PatientProfile(
-                "MT2026-0142",
-                "Arjun Iyer"
-            );
+        Podcast p =
+                new Podcast("Tech Talk", 12);
 
-        System.out.println(p2.getPatientId());
+        System.out.println(p.play());
 
-        PatientProfile p3 = new PatientProfile();
+        Playable ref = a; // upcasting
 
-        p3.setPatientId("MT2026-0142");
-        p3.setPatientId("HACKED-0000");
+        System.out.println(ref.play());
 
-        System.out.println(p3.getPatientId());
-
-        p3.setLockerPin("1234");
+        launchAll(
+                new Playable[]{ref, p}
+        );
     }
 }

@@ -1,78 +1,98 @@
-import java.util.Arrays;
+abstract class StaffMember {
 
-class PatientVitals {
+    private double baseSalary;
+    protected double bonusRate;
 
-    private double[] readings;
-    private int count;
+    public StaffMember(double baseSalary) {
+        this(baseSalary, 0.10);
+    }
 
-    PatientVitals(double[] initialReadings) {
+    public StaffMember(double baseSalary, double bonusRate) {
+        this.baseSalary = baseSalary;
+        this.bonusRate = bonusRate;
+    }
 
-        readings = new double[500];
-        count = 0;
+    public abstract double calculateBonus();
 
-        if (initialReadings != null) {
-            for (double reading : initialReadings)
-                recordReading(reading);
+    double getSalary() {
+        return baseSalary;
+    }
+
+    void setSalary(double baseSalary) {
+
+        if (baseSalary >= 0) {
+            this.baseSalary = baseSalary;
         }
     }
+}
 
-    void recordReading(double reading) {
+interface Auditable {
+    String auditRecord();
+}
 
-        if (reading <= 0 || reading > 45)
-            return;
+class TeamLead extends StaffMember
+        implements Auditable {
 
-        if (count < readings.length) {
-            readings[count] = reading;
-            count++;
-        }
+    private int teamSize;
+
+    public TeamLead(double baseSalary, int teamSize) {
+        super(baseSalary);
+        this.teamSize = teamSize;
     }
 
-    double getAverage() {
+    public TeamLead(
+            double baseSalary,
+            double bonusRate,
+            int teamSize) {
 
-        if (count == 0)
-            return 0;
-
-        double total = 0;
-
-        for (int i = 0; i < count; i++)
-            total += readings[i];
-
-        return total / count;
+        super(baseSalary, bonusRate);
+        this.teamSize = teamSize;
     }
 
-    double[] getAllReadings() {
+    @Override
+    public double calculateBonus() {
+        return getSalary() * bonusRate;
+    }
 
-        double[] copy = new double[count];
-
-        for (int i = 0; i < count; i++)
-            copy[i] = readings[i];
-
-        return copy;
+    @Override
+    public String auditRecord() {
+        return "TeamLead audit: " + teamSize
+                + " team members, salary $"
+                + getSalary();
     }
 }
 
 public class F3 {
+
+    static String getAuditIfApplicable(StaffMember s) {
+
+        if (s instanceof Auditable) {
+
+            Auditable a = (Auditable) s;
+
+            return a.auditRecord();
+        }
+
+        return "No audit required";
+    }
+
     public static void main(String[] args) {
 
-        PatientVitals v =
-            new PatientVitals(
-                new double[]{36.5, -2, 37.1}
-            );
+        TeamLead t =
+                new TeamLead(60000, 5);
 
-        System.out.println(
-            Arrays.toString(v.getAllReadings())
-        );
+        TeamLead t2 =
+                new TeamLead(60000, 0.20, 5);
 
-        double[] copy = v.getAllReadings();
+        System.out.println(t.calculateBonus());
+        System.out.println(t2.calculateBonus());
 
-        copy[0] = 999;
+        t.setSalary(-5000);
 
-        System.out.println(
-            v.getAllReadings()[0]
-        );
+        System.out.println(t.getSalary());
 
-        System.out.println(
-            "Average: " + v.getAverage()
-        );
+        StaffMember ref = t; // upcasting
+
+        System.out.println(getAuditIfApplicable(ref));
     }
 }
