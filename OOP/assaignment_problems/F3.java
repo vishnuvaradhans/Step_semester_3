@@ -1,62 +1,93 @@
-class Canteen {
-    String canteenCode;
-    String canteenName;
-    int trustScore;
+class RaceEntry {
 
-    public Canteen(String canteenCode,
-                   String canteenName,
-                   int trustScore) {
-        this.canteenCode = canteenCode;
-        this.canteenName = canteenName;
-        this.trustScore = trustScore;
-    }
+    protected String bibNumber;
+    protected double entryFee;
+    protected double balanceDue;
 
-    public Canteen(String canteenCode, String canteenName) {
-        this(canteenCode, canteenName, 3);
-    }
+    private double[] lateFeeHistory = new double[10];
+    private int lateFeeCount = 0;
 
-    int compareTo(Canteen other) {
-        if (this.trustScore != other.trustScore)
-            return other.trustScore - this.trustScore;
+    public RaceEntry(String bibNumber, double entryFee) {
 
-        int codeCompare =
-            this.canteenCode.compareToIgnoreCase(other.canteenCode);
-
-        if (codeCompare != 0)
-            return codeCompare;
-
-        return this.canteenName.length() - other.canteenName.length();
-    }
-
-    static Canteen[] rankCanteens(Canteen[] canteens) {
-        Canteen[] result = canteens.clone();
-
-        for (int i = 0; i < result.length - 1; i++) {
-            for (int j = 0; j < result.length - 1 - i; j++) {
-
-                if (result[j].compareTo(result[j + 1]) > 0) {
-                    Canteen temp = result[j];
-                    result[j] = result[j + 1];
-                    result[j + 1] = temp;
-                }
-            }
+        if (bibNumber == null ||
+            bibNumber.trim().length() < 4) {
+            throw new IllegalArgumentException("Invalid bib number");
         }
 
-        return result;
+        this.bibNumber = bibNumber;
+        this.entryFee = entryFee;
+        this.balanceDue = entryFee;
+    }
+
+    public void pay(double amount) {
+        balanceDue -= amount;
+    }
+
+    protected void applyLateFee(double amount) {
+
+        balanceDue += amount;
+
+        lateFeeHistory[lateFeeCount] = amount;
+        lateFeeCount++;
+    }
+
+    double[] getLateFeeHistory() {
+
+        double[] copy = new double[lateFeeCount];
+
+        for (int i = 0; i < lateFeeCount; i++) {
+            copy[i] = lateFeeHistory[i];
+        }
+
+        return copy;
+    }
+
+    public double getBalanceDue() {
+        return balanceDue;
+    }
+}
+
+class RunnerEntry extends RaceEntry {
+
+    private String category;
+
+    public RunnerEntry(
+            String bibNumber,
+            double entryFee,
+            String category) {
+
+        super(bibNumber, entryFee);
+        this.category = category;
+    }
+
+    @Override
+    protected void applyLateFee(double amount) {
+        super.applyLateFee(amount * 2);
     }
 }
 
 public class F3 {
+
     public static void main(String[] args) {
-        Canteen[] canteens = {
-            new Canteen("HB3-C", "Spice Junction", 3),
-            new Canteen("hb1-c", "Grand Mess", 5),
-            new Canteen("HB2-C", "Southern Treats")
-        };
 
-        Canteen[] ranked = Canteen.rankCanteens(canteens);
+        RunnerEntry r =
+                new RunnerEntry(
+                        "BIB2001",
+                        80,
+                        "Open 10K");
 
-        for (Canteen c : ranked)
-            System.out.println(c.canteenCode);
+        r.pay(30);
+
+        r.applyLateFee(20);
+
+        System.out.println(r.getBalanceDue());
+
+        double[] history = r.getLateFeeHistory();
+
+        history[0] = 999;
+
+        double[] actual = r.getLateFeeHistory();
+
+        System.out.println(actual[0]);
     }
 }

@@ -1,121 +1,180 @@
-class DeliveryAccount {
-    String studentId;
-    double orderValue;
+class RaceEntry {
 
-    static String systemName;
+    private static int bibCounter = 0;
 
-    static {
-        systemName = "Campus Delivery System";
+    protected String bibNumber;
+    protected double entryFee;
+    protected double balanceDue;
+
+    private final int entryCode;
+
+    public RaceEntry(String bibNumber, double entryFee) {
+
+        if (bibNumber == null ||
+            bibNumber.trim().length() < 4) {
+            throw new IllegalArgumentException("Invalid bib number");
+        }
+
+        this.bibNumber = bibNumber;
+        this.entryFee = entryFee;
+        this.balanceDue = entryFee;
+
+        bibCounter++;
+        entryCode = bibCounter;
     }
 
-    public DeliveryAccount(String studentId, double orderValue) {
-        this.studentId = studentId;
-        this.orderValue = orderValue;
+    public void pay(double amount) {
+        balanceDue -= amount;
     }
 
-    public DeliveryAccount(String studentId) {
-        this(studentId, 0);
+    public void pay(double amount, String mode) {
+
+        pay(amount);
+
+        System.out.println("Paying via " + mode);
     }
 
-    final double calculateSurgeFee(int delayMinutes) {
-        if (delayMinutes < 0)
-            throw new IllegalArgumentException("Invalid delay");
+    public double getBalanceDue() {
+        return balanceDue;
+    }
 
-        if (delayMinutes == 0)
-            return 0;
+    static boolean isValidDiscountCode(String code) {
 
-        double percent = 0;
+        if (code == null || code.length() != 5) {
+            return false;
+        }
 
-        percent += Math.min(delayMinutes, 5) * 0.5;
+        if (code.charAt(0) != 'M') {
+            return false;
+        }
 
-        if (delayMinutes > 5)
-            percent += Math.min(delayMinutes - 5, 10) * 1.0;
+        if (!Character.isDigit(code.charAt(1)) ||
+            !Character.isDigit(code.charAt(2)) ||
+            !Character.isDigit(code.charAt(3))) {
+            return false;
+        }
 
-        if (delayMinutes > 15)
-            percent += (delayMinutes - 15) * 2.0;
+        if (!Character.isUpperCase(code.charAt(4))) {
+            return false;
+        }
 
-        return orderValue * percent / 100;
+        return true;
+    }
+
+    static int getBibCounter() {
+        return bibCounter;
     }
 }
 
-class Premium extends DeliveryAccount {
+class RunnerEntry extends RaceEntry {
 
-    public Premium(String studentId, double orderValue) {
-        super(studentId, orderValue);
+    public RunnerEntry(
+            String bibNumber,
+            double entryFee,
+            String category) {
+
+        super(bibNumber, entryFee);
+    }
+}
+
+class EliteRunnerEntry extends RunnerEntry {
+
+    public EliteRunnerEntry(
+            String bibNumber,
+            double entryFee,
+            String category,
+            double sponsorBonus) {
+
+        super(bibNumber, entryFee, category);
+    }
+}
+
+class RelayTeamEntry extends RaceEntry {
+
+    private int teamSize;
+
+    public RelayTeamEntry(
+            String bibNumber,
+            double entryFee,
+            int teamSize) {
+
+        super(bibNumber, entryFee);
+        this.teamSize = teamSize;
     }
 }
 
 public class F5 {
 
-    static void processAccount(DeliveryAccount account,
-                               double amount,
-                               int delayMinutes) {
-        account.orderValue = amount;
-        account.calculateSurgeFee(delayMinutes);
-    }
-
-    static void processBatch(DeliveryAccount[] accounts,
-                             double[] amounts,
-                             int[] delayMinutesArray) {
-
-        if (accounts.length != amounts.length ||
-            accounts.length != delayMinutesArray.length) {
-            System.out.println("Invalid batch: array lengths do not match");
-            return;
-        }
+    static String settleNight(RaceEntry[] entries) {
 
         int processed = 0;
-        int skipped = 0;
-        int premium = 0;
-        int regular = 0;
+        int nullSkipped = 0;
+        int relay = 0;
+        int individual = 0;
 
-        double grandTotal = 0;
+        for (RaceEntry entry : entries) {
 
-        for (int i = 0; i < accounts.length; i++) {
-
-            if (accounts[i] == null) {
-                skipped++;
+            if (entry == null) {
+                nullSkipped++;
                 continue;
             }
 
-            processAccount(
-                accounts[i],
-                amounts[i],
-                delayMinutesArray[i]
-            );
-
-            double fee =
-                accounts[i].calculateSurgeFee(delayMinutesArray[i]);
-
-            grandTotal += fee;
             processed++;
 
-            if (accounts[i] instanceof Premium)
-                premium++;
-            else
-                regular++;
+            if (entry instanceof RelayTeamEntry) {
+                relay++;
+            } else {
+                individual++;
+            }
         }
 
-        System.out.println(
-            processed + " processed | " +
-            skipped + " null skipped | " +
-            premium + " premium | " +
-            regular + " regular | grand total surge fees = Rs " +
-            grandTotal
-        );
+        return processed + " processed | "
+                + nullSkipped + " null skipped | "
+                + relay + " relay | "
+                + individual + " individual";
     }
 
     public static void main(String[] args) {
 
-        DeliveryAccount[] accounts = {
-            new Premium("STU001", 500),
-            null,
-            new DeliveryAccount("STU002", 300)
-        };
+        System.out.println(
+            RaceEntry.isValidDiscountCode("M123A")
+        );
 
-        double[] amounts = {500, 400, 300};
-        int[] delays = {10, 5, 0};
+        System.out.println(
+            RaceEntry.isValidDiscountCode("M12A")
+        );
 
-        processBatch(accounts, amounts, delays);
+        System.out.println(
+            RaceEntry.isValidDiscountCode("X123A")
+        );
+
+        EliteRunnerEntry elite =
+                new EliteRunnerEntry(
+                        "BIB3001",
+                        150,
+                        "Elite",
+                        500);
+
+        RelayTeamEntry relay =
+                new RelayTeamEntry(
+                        "BIB4001",
+                        300,
+                        4);
+
+        elite.pay(10, "UPI");
+
+        System.out.println(
+            RaceEntry.getBibCounter()
+        );
+
+        System.out.println(
+            settleNight(
+                new RaceEntry[]{
+                    elite,
+                    null,
+                    relay
+                }
+            )
+        );
     }
 }

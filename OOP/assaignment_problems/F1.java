@@ -1,54 +1,80 @@
-class FoodOrder {
-    private String studentName;
-    private String dishName;
-    private boolean delivered;
+class RaceEntry {
 
-    public FoodOrder(String studentName, String dishName) {
-        if (studentName == null || studentName.trim().isEmpty())
-            throw new IllegalArgumentException("Invalid student name");
+    protected String bibNumber;
+    protected double entryFee;
+    protected double balanceDue;
 
-        if (dishName == null || dishName.trim().isEmpty())
-            throw new IllegalArgumentException("Invalid dish name");
+    public RaceEntry(String bibNumber, double entryFee) {
 
-        this.studentName = studentName;
-        this.dishName = dishName;
-        this.delivered = false;
-    }
-
-    void markDelivered() {
-        if (delivered)
-            System.out.println("Order already delivered");
-        else {
-            delivered = true;
-            System.out.println("Order delivered");
-        }
-    }
-
-    static void processBatch(String[][] rawOrders) {
-        int valid = 0, rejected = 0;
-
-        for (String[] order : rawOrders) {
-            try {
-                new FoodOrder(order[0], order[1]);
-                valid++;
-            } catch (Exception e) {
-                rejected++;
-            }
+        if (bibNumber == null ||
+            bibNumber.trim().length() < 4) {
+            throw new IllegalArgumentException("Invalid bib number");
         }
 
-        System.out.println("Valid: " + valid + " | Rejected: " + rejected);
+        this.bibNumber = bibNumber;
+        this.entryFee = entryFee;
+        this.balanceDue = entryFee;
+    }
+
+    public void pay(double amount) {
+        balanceDue -= amount;
+    }
+
+    public double getBalanceDue() {
+        return balanceDue;
+    }
+}
+
+class RunnerEntry extends RaceEntry {
+
+    private String category;
+
+    public RunnerEntry(
+            String bibNumber,
+            double entryFee,
+            String category) {
+
+        super(bibNumber, entryFee);
+        this.category = category;
     }
 }
 
 public class F1 {
-    public static void main(String[] args) {
-        String[][] orders = {
-            {"Ravi", "Paneer Butter Masala"},
-            {"", "Chole Bhature"},
-            {"Meera", " "},
-            {"Divya", "Veg Biryani"}
-        };
 
-        FoodOrder.processBatch(orders);
+    static String registerBatch(
+            String[] bibNumbers,
+            double entryFee) {
+
+        int registered = 0;
+        int rejected = 0;
+
+        for (String bib : bibNumbers) {
+            try {
+                new RaceEntry(bib, entryFee);
+                registered++;
+            } catch (IllegalArgumentException e) {
+                rejected++;
+            }
+        }
+
+        return "Registered: " + registered
+                + " | Rejected: " + rejected;
+    }
+
+    public static void main(String[] args) {
+
+        RunnerEntry r =
+                new RunnerEntry("BIB2001", 80, "Open 10K");
+
+        r.pay(30);
+
+        System.out.println(r.getBalanceDue());
+
+        System.out.println(
+            registerBatch(
+                new String[]{"BIB1", "B1", "BIB2"},
+                80
+            )
+        );
     }
 }

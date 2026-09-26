@@ -1,33 +1,157 @@
-class DeliverySlot {
-    private String orderId;
-    private String timeSlot;
+class RaceEntry {
 
-    public DeliverySlot(String orderId, String timeSlot) {
-        this.orderId = orderId;
-        this.timeSlot = timeSlot;
+    protected String bibNumber;
+    protected double entryFee;
+    protected double balanceDue;
+
+    public RaceEntry(String bibNumber, double entryFee) {
+
+        if (bibNumber == null ||
+            bibNumber.trim().length() < 4) {
+            throw new IllegalArgumentException("Invalid bib number");
+        }
+
+        this.bibNumber = bibNumber;
+        this.entryFee = entryFee;
+        this.balanceDue = entryFee;
     }
 
-    public DeliverySlot(String orderId) {
-        this(orderId, "ASAP");
+    public void pay(double amount) {
+        balanceDue -= amount;
     }
 
-    boolean isPeakHour() {
-        return timeSlot.equals("12:00-13:00") ||
-               timeSlot.equals("13:00-14:00") ||
-               timeSlot.equals("19:00-20:00") ||
-               timeSlot.equals("20:00-21:00");
+    public double getBalanceDue() {
+        return balanceDue;
+    }
+
+    public String announce() {
+        return "Race Entry | Bib: " + bibNumber
+                + " | Balance: " + balanceDue;
+    }
+}
+
+class RunnerEntry extends RaceEntry {
+
+    protected String category;
+
+    public RunnerEntry(
+            String bibNumber,
+            double entryFee,
+            String category) {
+
+        super(bibNumber, entryFee);
+        this.category = category;
+    }
+
+    @Override
+    public String announce() {
+        return "Runner Entry | Bib: " + bibNumber
+                + " | Category: " + category
+                + " | Balance: " + balanceDue;
+    }
+}
+
+class EliteRunnerEntry extends RunnerEntry {
+
+    private double sponsorBonus;
+
+    public EliteRunnerEntry(
+            String bibNumber,
+            double entryFee,
+            String category,
+            double sponsorBonus) {
+
+        super(bibNumber, entryFee, category);
+        this.sponsorBonus = sponsorBonus;
+    }
+
+    @Override
+    public String announce() {
+        return "Elite Runner | Bib: " + bibNumber
+                + " | Category: " + category
+                + " | Sponsor Bonus: " + sponsorBonus
+                + " | Balance: " + balanceDue;
+    }
+}
+
+class RelayTeamEntry extends RaceEntry {
+
+    private int teamSize;
+
+    public RelayTeamEntry(
+            String bibNumber,
+            double entryFee,
+            int teamSize) {
+
+        super(bibNumber, entryFee);
+        this.teamSize = teamSize;
+    }
+
+    public int getTeamSize() {
+        return teamSize;
+    }
+
+    @Override
+    public String announce() {
+        return "Relay Team | Bib: " + bibNumber
+                + " | Team Size: " + teamSize
+                + " | Balance: " + balanceDue;
     }
 }
 
 public class F2 {
+
+    static String classifyGeneration(RaceEntry entry) {
+
+        if (entry instanceof EliteRunnerEntry) {
+            return "Multilevel descendant (3 generations deep)";
+        }
+
+        if (entry instanceof RelayTeamEntry) {
+            return "Hierarchical sibling (independent branch)";
+        }
+
+        return "Base or direct descendant";
+    }
+
+    static double getTotalBalanceDue(RaceEntry[] entries) {
+
+        double total = 0;
+
+        for (RaceEntry entry : entries) {
+            total += entry.getBalanceDue();
+        }
+
+        return total;
+    }
+
     public static void main(String[] args) {
-        DeliverySlot d1 =
-            new DeliverySlot("ORD101", "13:00-14:00");
 
-        DeliverySlot d2 =
-            new DeliverySlot("ORD102");
+        RunnerEntry runner =
+                new RunnerEntry("BIB2001", 80, "Open 10K");
 
-        System.out.println(d1.isPeakHour());
-        System.out.println(d2.isPeakHour());
+        EliteRunnerEntry elite =
+                new EliteRunnerEntry(
+                        "BIB3001",
+                        150,
+                        "Elite Full Marathon",
+                        500);
+
+        RelayTeamEntry relay =
+                new RelayTeamEntry(
+                        "BIB4001", 300, 4);
+
+        System.out.println(runner.announce());
+        System.out.println(elite.announce());
+        System.out.println(relay.announce());
+
+        System.out.println(classifyGeneration(elite));
+        System.out.println(classifyGeneration(relay));
+
+        System.out.println(
+            getTotalBalanceDue(
+                new RaceEntry[]{runner, elite, relay}
+            )
+        );
     }
 }

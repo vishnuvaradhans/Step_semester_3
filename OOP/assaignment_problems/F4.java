@@ -1,51 +1,128 @@
-final class SurgeFeeCalculator {
-    private final double minimumSurgePercent;
+class RaceEntry {
 
-    public SurgeFeeCalculator(double minimumSurgePercent) {
-        this.minimumSurgePercent = minimumSurgePercent;
+    protected String bibNumber;
+    protected double entryFee;
+    protected double balanceDue;
+
+    public RaceEntry(String bibNumber, double entryFee) {
+
+        if (bibNumber == null ||
+            bibNumber.trim().length() < 4) {
+            throw new IllegalArgumentException("Invalid bib number");
+        }
+
+        this.bibNumber = bibNumber;
+        this.entryFee = entryFee;
+        this.balanceDue = entryFee;
     }
 
-    final double calculateSurgeFee(double orderValue, int delayMinutes) {
-        if (orderValue < 0 || delayMinutes < 0)
-            throw new IllegalArgumentException("Invalid input");
+    public void pay(double amount) {
+        balanceDue -= amount;
+    }
 
-        if (delayMinutes == 0)
-            return 0;
+    public double getBalanceDue() {
+        return balanceDue;
+    }
 
-        double surgePercent = 0;
+    public String announce() {
+        return "Race Entry | Bib: " + bibNumber
+                + " | Balance: " + balanceDue;
+    }
+}
 
-        int first = Math.min(delayMinutes, 5);
-        surgePercent += first * 0.5;
+class RunnerEntry extends RaceEntry {
 
-        if (delayMinutes > 5) {
-            int second = Math.min(delayMinutes - 5, 10);
-            surgePercent += second * 1.0;
-        }
+    private String category;
 
-        if (delayMinutes > 15) {
-            int third = delayMinutes - 15;
-            surgePercent += third * 2.0;
-        }
+    public RunnerEntry(
+            String bibNumber,
+            double entryFee,
+            String category) {
 
-        double tieredFee = orderValue * surgePercent / 100;
-        double minimumFee = orderValue * minimumSurgePercent / 100;
+        super(bibNumber, entryFee);
+        this.category = category;
+    }
 
-        return Math.max(tieredFee, minimumFee);
+    @Override
+    public String announce() {
+        return "Runner Entry | Bib: " + bibNumber
+                + " | Category: " + category
+                + " | Balance: " + balanceDue;
+    }
+}
+
+class RelayTeamEntry extends RaceEntry {
+
+    private int teamSize;
+
+    public RelayTeamEntry(
+            String bibNumber,
+            double entryFee,
+            int teamSize) {
+
+        super(bibNumber, entryFee);
+        this.teamSize = teamSize;
+    }
+
+    public int getTeamSize() {
+        return teamSize;
+    }
+
+    @Override
+    public String announce() {
+        return "Relay Team | Bib: " + bibNumber
+                + " | Team Size: " + teamSize
+                + " | Balance: " + balanceDue;
     }
 }
 
 public class F4 {
+
+    static String announceAll(RaceEntry[] entries) {
+
+        StringBuilder result = new StringBuilder();
+
+        for (RaceEntry entry : entries) {
+
+            result.append(entry.announce());
+
+            if (entry instanceof RelayTeamEntry) {
+
+                RelayTeamEntry relay =
+                        (RelayTeamEntry) entry;
+
+                result.append(
+                    " [Team size via downcast: "
+                    + relay.getTeamSize() + "]"
+                );
+            }
+
+            result.append(" | ");
+        }
+
+        return result.toString();
+    }
+
     public static void main(String[] args) {
-        SurgeFeeCalculator calculator =
-            new SurgeFeeCalculator(1);
 
-        System.out.println("Rs " +
-            calculator.calculateSurgeFee(500, 0));
+        RunnerEntry runner =
+                new RunnerEntry(
+                        "BIB2001",
+                        80,
+                        "Open 10K");
 
-        System.out.println("Rs " +
-            calculator.calculateSurgeFee(500, 1));
+        runner.pay(30);
 
-        System.out.println("Rs " +
-            calculator.calculateSurgeFee(500, 16));
+        RelayTeamEntry relay =
+                new RelayTeamEntry(
+                        "BIB4001",
+                        300,
+                        4);
+
+        System.out.println(
+            announceAll(
+                new RaceEntry[]{runner, relay}
+            )
+        );
     }
 }
