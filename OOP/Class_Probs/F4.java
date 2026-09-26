@@ -1,72 +1,111 @@
-class EventTicket {
-    protected double basePrice;
+abstract class Employee {
+    String name;
 
-    public EventTicket(double basePrice) {
-        this.basePrice = basePrice;
+    Employee(String name) {
+        this.name = name;
     }
 
-    String printTicket() {
-        return "Standard | Balance: " + basePrice;
+    abstract boolean canTakeLeave(int days);
+}
+
+class FullTime extends Employee {
+    FullTime(String name) {
+        super(name);
+    }
+
+    boolean canTakeLeave(int days) {
+        return days <= 30;
     }
 }
 
-class WorkshopTicket extends EventTicket {
-    private String track;
-
-    public WorkshopTicket(double basePrice, String track) {
-        super(basePrice);
-        this.track = track;
+class PartTime extends Employee {
+    PartTime(String name) {
+        super(name);
     }
 
-    String getTrack() {
-        return track;
+    boolean canTakeLeave(int days) {
+        return days <= 15;
+    }
+}
+
+class LeaveRequest {
+
+    Employee employee;
+    String start;
+    String end;
+    String status = "Pending";
+
+    LeaveRequest(
+            Employee employee,
+            String start,
+            String end) {
+
+        this.employee = employee;
+        this.start = start;
+        this.end = end;
     }
 
-    @Override
-    String printTicket() {
-        return "Workshop | Track: " + track +
-               " | Balance: " + basePrice;
+    void approve() {
+        if (status.equals("Pending"))
+            status = "Approved";
+    }
+
+    void reject() {
+        if (status.equals("Pending"))
+            status = "Rejected";
+    }
+
+    void pending() {
+        if (!status.equals("Pending"))
+            System.out.println(
+                "Cannot change status: " +
+                status +
+                " request cannot revert to Pending."
+            );
     }
 }
 
 public class F4 {
-
-    static String batchPrint(EventTicket[] tickets) {
-
-        StringBuilder result =
-            new StringBuilder();
-
-        for (EventTicket ticket : tickets) {
-
-            result.append(ticket.printTicket());
-
-            if (ticket instanceof WorkshopTicket) {
-                WorkshopTicket w =
-                    (WorkshopTicket) ticket;
-
-                result.append(
-                    " [Track via downcast: "
-                );
-
-                result.append(w.getTrack());
-                result.append("]");
-            }
-
-            result.append(" | ");
-        }
-
-        return result.toString();
-    }
-
     public static void main(String[] args) {
 
-        EventTicket[] tickets = {
-            new EventTicket(500),
-            new WorkshopTicket(1200, "AI/ML")
-        };
+        Employee john =
+            new FullTime("John Doe");
+
+        LeaveRequest r1 =
+            new LeaveRequest(
+                john,
+                "2024-10-10",
+                "2024-10-12"
+            );
 
         System.out.println(
-            batchPrint(tickets)
+            "Leave request submitted by " +
+            john.name + ". Status: " + r1.status
         );
+
+        r1.approve();
+
+        System.out.println(
+            "Leave request for " +
+            john.name + " approved. Status: " +
+            r1.status
+        );
+
+        Employee jane =
+            new PartTime("Jane Smith");
+
+        LeaveRequest r2 =
+            new LeaveRequest(
+                jane,
+                "2024-11-01",
+                "2024-11-05"
+            );
+
+        System.out.println(
+            "Leave request submitted by " +
+            jane.name + ". Status: " + r2.status
+        );
+
+        r1.pending();
     }
 }

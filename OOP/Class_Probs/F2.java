@@ -1,136 +1,74 @@
-class EventTicket {
-    protected String attendeeId;
-    protected double basePrice;
-    protected double amountPaid;
+abstract class Vehicle {
+    String name;
+    boolean available = true;
 
-    public EventTicket(String attendeeId, double basePrice) {
-        this.attendeeId = attendeeId;
-        this.basePrice = basePrice;
-        this.amountPaid = 0;
+    Vehicle(String name) {
+        this.name = name;
     }
 
-    void pay(double amount) {
-        amountPaid += amount;
+    abstract double calculateCharge(int days);
+}
+
+class StandardCar extends Vehicle {
+    StandardCar(String name) {
+        super(name);
     }
 
-    double getBalanceDue() {
-        return basePrice - amountPaid;
-    }
-
-    String printTicket() {
-        return "Standard Event Ticket | Balance Due: " +
-               getBalanceDue();
+    double calculateCharge(int days) {
+        return days * 50;
     }
 }
 
-class WorkshopTicket extends EventTicket {
-    protected String track;
-
-    public WorkshopTicket(String attendeeId,
-                          double basePrice,
-                          String track) {
-        super(attendeeId, basePrice);
-        this.track = track;
+class LuxuryCar extends Vehicle {
+    LuxuryCar(String name) {
+        super(name);
     }
 
-    @Override
-    String printTicket() {
-        return "Workshop Ticket | Track: " + track +
-               " | Balance Due: " + getBalanceDue();
+    double calculateCharge(int days) {
+        return days * 100;
     }
 }
 
-class PremiumWorkshopTicket extends WorkshopTicket {
-    private double kitFee;
+class RentalService {
 
-    public PremiumWorkshopTicket(String attendeeId,
-                                 double basePrice,
-                                 String track,
-                                 double kitFee) {
-        super(attendeeId, basePrice, track);
-        this.kitFee = kitFee;
+    void rent(Vehicle v, int days) {
+
+        if (!v.available) {
+            System.out.println(v.name + " is not available.");
+            return;
+        }
+
+        v.available = false;
+
+        System.out.printf(
+            "%s rented for %d days. Total charge: $%.2f%n",
+            v.name, days, v.calculateCharge(days)
+        );
     }
 
-    @Override
-    String printTicket() {
-        return "Premium Workshop Ticket | Track: " + track +
-               " | Kit Fee: " + kitFee +
-               " | Balance Due: " + getBalanceDue();
-    }
-}
-
-class HackathonTicket extends EventTicket {
-    private String teamName;
-
-    public HackathonTicket(String attendeeId,
-                           double basePrice,
-                           String teamName) {
-        super(attendeeId, basePrice);
-        this.teamName = teamName;
-    }
-
-    @Override
-    String printTicket() {
-        return "Hackathon Ticket | Team: " + teamName +
-               " | Balance Due: " + getBalanceDue();
+    void returnVehicle(Vehicle v) {
+        v.available = true;
+        System.out.println(
+            v.name + " returned. Now available."
+        );
     }
 }
 
 public class F2 {
-
-    static String classifyGeneration(EventTicket ticket) {
-
-        if (ticket instanceof PremiumWorkshopTicket)
-            return "Multilevel descendant (3 generations deep)";
-
-        if (ticket instanceof HackathonTicket)
-            return "Hierarchical sibling (independent branch)";
-
-        if (ticket instanceof WorkshopTicket)
-            return "Single inheritance child";
-
-        return "Base class";
-    }
-
-    static double getTotalBalanceDue(EventTicket[] tickets) {
-        double total = 0;
-
-        for (EventTicket ticket : tickets)
-            total += ticket.getBalanceDue();
-
-        return total;
-    }
-
     public static void main(String[] args) {
 
-        EventTicket standard =
-            new EventTicket("STU1", 500);
+        Vehicle luxury =
+            new LuxuryCar("Luxury Car A");
 
-        WorkshopTicket workshop =
-            new WorkshopTicket("STU2", 1200, "AI/ML");
+        Vehicle standard =
+            new StandardCar("Standard Car B");
 
-        PremiumWorkshopTicket premium =
-            new PremiumWorkshopTicket(
-                "STU3", 2000, "Cloud Native", 300
-            );
+        RentalService service =
+            new RentalService();
 
-        HackathonTicket hackathon =
-            new HackathonTicket(
-                "STU4", 800, "Byte Force"
-            );
+        service.rent(luxury, 3);
+        service.rent(standard, 5);
 
-        System.out.println(standard.printTicket());
-        System.out.println(workshop.printTicket());
-        System.out.println(premium.printTicket());
-        System.out.println(hackathon.printTicket());
-
-        System.out.println(classifyGeneration(premium));
-        System.out.println(classifyGeneration(hackathon));
-
-        EventTicket[] tickets = {
-            standard, workshop, premium, hackathon
-        };
-
-        System.out.println(getTotalBalanceDue(tickets));
+        service.returnVehicle(luxury);
     }
 }

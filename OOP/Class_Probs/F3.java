@@ -1,78 +1,106 @@
-import java.util.Arrays;
+class Room {
+    String name;
+    double price;
+    boolean booked = false;
 
-class EventTicket {
-    protected double basePrice;
-    protected double amountPaid;
-
-    private double[] lateFeeHistory = new double[10];
-    private int lateFeeCount = 0;
-
-    public EventTicket(double basePrice) {
-        this.basePrice = basePrice;
-        this.amountPaid = 0;
-    }
-
-    void pay(double amount) {
-        amountPaid += amount;
-    }
-
-    double getBalanceDue() {
-        return basePrice - amountPaid;
-    }
-
-    protected void applyLateFee(double amount) {
-        basePrice += amount;
-
-        if (lateFeeCount < lateFeeHistory.length) {
-            lateFeeHistory[lateFeeCount] = amount;
-            lateFeeCount++;
-        }
-    }
-
-    double[] getLateFeeHistory() {
-        return Arrays.copyOf(
-            lateFeeHistory,
-            lateFeeCount
-        );
+    Room(String name, double price) {
+        this.name = name;
+        this.price = price;
     }
 }
 
-class WorkshopTicket extends EventTicket {
+class Reservation {
+    Room room;
+    String start;
+    String end;
+    boolean active = true;
 
-    public WorkshopTicket(double basePrice) {
-        super(basePrice);
+    Reservation(Room room, String start, String end) {
+        this.room = room;
+        this.start = start;
+        this.end = end;
+    }
+}
+
+class Hotel {
+
+    boolean available(Room room) {
+        return !room.booked;
     }
 
-    @Override
-    protected void applyLateFee(double amount) {
-        super.applyLateFee(amount * 2);
+    Reservation book(
+            Room room,
+            String start,
+            String end,
+            int days) {
+
+        if (!available(room)) {
+            System.out.println(
+                "Booking failed: " + room.name +
+                " is not available."
+            );
+            return null;
+        }
+
+        room.booked = true;
+
+        double price = room.price * days;
+
+        System.out.printf(
+            "%s booked from %s to %s. Total price: $%.2f%n",
+            room.name, start, end, price
+        );
+
+        return new Reservation(room, start, end);
+    }
+
+    void cancel(Reservation r) {
+
+        if (r != null && r.active) {
+            r.active = false;
+            r.room.booked = false;
+
+            System.out.println(
+                "Reservation for " + r.room.name +
+                " cancelled successfully."
+            );
+        }
     }
 }
 
 public class F3 {
     public static void main(String[] args) {
 
-        WorkshopTicket w =
-            new WorkshopTicket(1200);
+        Room deluxe =
+            new Room("Deluxe Room 101", 200);
 
-        w.pay(1200);
-        w.applyLateFee(100);
+        Room standard =
+            new Room("Standard Room 205", 150);
 
-        System.out.println(w.getBalanceDue());
+        Hotel hotel = new Hotel();
 
-        double[] history =
-            w.getLateFeeHistory();
+        Reservation r1 =
+            hotel.book(
+                deluxe,
+                "2024-12-01",
+                "2024-12-05",
+                4
+            );
 
-        System.out.println(
-            Arrays.toString(history)
+        hotel.book(
+            standard,
+            "2024-12-03",
+            "2024-12-07",
+            4
         );
 
-        history[0] = 999;
-
-        System.out.println(
-            Arrays.toString(
-                w.getLateFeeHistory()
-            )
+        hotel.book(
+            deluxe,
+            "2024-12-03",
+            "2024-12-07",
+            4
         );
+
+        hotel.cancel(r1);
     }
 }

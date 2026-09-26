@@ -1,142 +1,101 @@
-class EventTicket {
+import java.util.*;
 
-    private static int ticketCounter = 1000;
+interface IPaymentMethod {
+    boolean pay(double amount);
+    String getName();
+}
 
-    public final String ticketId;
+class CreditCardPayment implements IPaymentMethod {
 
-    protected double basePrice;
-    protected double amountPaid;
-
-    public EventTicket(double basePrice) {
-        ticketCounter++;
-
-        ticketId =
-            "TCK-" + ticketCounter;
-
-        this.basePrice = basePrice;
-        this.amountPaid = 0;
+    public boolean pay(double amount) {
+        return true;
     }
 
-    void pay(double amount) {
-        if (amount > 0)
-            amountPaid += amount;
-    }
-
-    void pay(double amount, String mode) {
-        System.out.println(
-            "Payment Mode: " + mode
-        );
-
-        pay(amount);
-    }
-
-    double getBalanceDue() {
-        return basePrice - amountPaid;
-    }
-
-    static boolean isValidPromoCode(String code) {
-
-        if (code == null || code.length() != 5)
-            return false;
-
-        if (code.charAt(0) != 'F')
-            return false;
-
-        for (int i = 1; i <= 3; i++) {
-            if (!Character.isDigit(code.charAt(i)))
-                return false;
-        }
-
-        return Character.isUpperCase(
-            code.charAt(4)
-        );
-    }
-
-    static int getTicketsIssued() {
-        return ticketCounter - 1000;
+    public String getName() {
+        return "Credit Card";
     }
 }
 
-class GroupTicket extends EventTicket {
+class DigitalWalletPayment implements IPaymentMethod {
 
-    private int groupSize;
+    public boolean pay(double amount) {
+        return false;
+    }
 
-    public GroupTicket(double basePrice,
-                       int groupSize) {
-        super(basePrice);
-        this.groupSize = groupSize;
+    public String getName() {
+        return "Digital Wallet";
+    }
+}
+
+class LineItem {
+    String food;
+    int quantity;
+
+    LineItem(String food, int quantity) {
+        this.food = food;
+        this.quantity = quantity;
+    }
+}
+
+class Order {
+
+    private ArrayList<LineItem> items =
+        new ArrayList<>();
+
+    void addItem(String food, int quantity) {
+        items.add(new LineItem(food, quantity));
+
+        System.out.println(
+            "Added " + food +
+            " (Qty " + quantity + ")"
+        );
+    }
+
+    void place(IPaymentMethod payment) {
+
+        if (items.isEmpty()) {
+            System.out.println(
+                "Cannot place order: Order must contain at least one item."
+            );
+            return;
+        }
+
+        System.out.println("Order placed successfully.");
+
+        if (payment.pay(100)) {
+            System.out.println(
+                "Payment via " + payment.getName() +
+                " successful."
+            );
+            System.out.println("Order status: Paid");
+        } else {
+            System.out.println(
+                "Payment via " + payment.getName() +
+                " failed."
+            );
+            System.out.println("Order status: Pending Payment");
+        }
     }
 }
 
 public class F5 {
-
-    static String processNightlySettlement(
-            EventTicket[] tickets) {
-
-        int processed = 0;
-        int skipped = 0;
-        int group = 0;
-        int individual = 0;
-
-        for (EventTicket ticket : tickets) {
-
-            if (ticket == null) {
-                skipped++;
-                continue;
-            }
-
-            processed++;
-
-            if (ticket instanceof GroupTicket)
-                group++;
-            else
-                individual++;
-        }
-
-        return processed + " processed | " +
-               skipped + " null skipped | " +
-               group + " group | " +
-               individual + " individual";
-    }
-
     public static void main(String[] args) {
 
-        EventTicket t1 =
-            new EventTicket(500);
+        Order order1 = new Order();
 
-        System.out.println(t1.ticketId);
+        order1.addItem("Pizza", 2);
+        order1.addItem("Soda", 1);
 
-        System.out.println(
-            EventTicket.getTicketsIssued()
+        order1.place(
+            new CreditCardPayment()
         );
 
-        System.out.println(
-            EventTicket.isValidPromoCode("F123A")
-        );
+        Order order2 = new Order();
 
-        System.out.println(
-            EventTicket.isValidPromoCode("F12A")
-        );
+        order2.addItem("Burger", 1);
 
-        System.out.println(
-            EventTicket.isValidPromoCode("X123A")
-        );
-
-        t1.pay(200);
-        t1.pay(200, "UPI");
-
-        System.out.println(
-            t1.getBalanceDue()
-        );
-
-        EventTicket[] tickets = {
-            new GroupTicket(2000, 5),
-            null,
-            new EventTicket(500)
-        };
-
-        System.out.println(
-            processNightlySettlement(tickets)
+        order2.place(
+            new DigitalWalletPayment()
         );
     }
 }

@@ -1,74 +1,88 @@
-class EventTicket {
-    protected String attendeeId;
-    protected double basePrice;
-    protected double amountPaid;
+import java.util.*;
 
-    public EventTicket(String attendeeId, double basePrice) {
-        if (attendeeId == null ||
-            attendeeId.trim().isEmpty() ||
-            attendeeId.trim().length() < 4) {
-            throw new IllegalArgumentException("Invalid attendee ID");
-        }
+abstract class Question {
+    String question;
+    String correctAnswer;
 
-        this.attendeeId = attendeeId.trim();
-        this.basePrice = basePrice;
-        this.amountPaid = 0;
+    Question(String question, String correctAnswer) {
+        this.question = question;
+        this.correctAnswer = correctAnswer;
     }
 
-    void pay(double amount) {
-        if (amount > 0)
-            amountPaid += amount;
+    abstract boolean checkAnswer(String answer);
+}
+
+class MCQ extends Question {
+    MCQ(String question, String correctAnswer) {
+        super(question, correctAnswer);
     }
 
-    double getBalanceDue() {
-        return basePrice - amountPaid;
-    }
-
-    static String registerBatch(String[] attendeeIds, double basePrice) {
-        int registered = 0;
-        int rejected = 0;
-
-        for (String id : attendeeIds) {
-            try {
-                new EventTicket(id, basePrice);
-                registered++;
-            } catch (IllegalArgumentException e) {
-                rejected++;
-            }
-        }
-
-        return "Registered: " + registered +
-               " | Rejected: " + rejected;
+    boolean checkAnswer(String answer) {
+        return correctAnswer.equalsIgnoreCase(answer);
     }
 }
 
-class WorkshopTicket extends EventTicket {
-    private String track;
+class Attempt {
+    private boolean submitted = false;
+    private int correct = 0;
+    private int total = 0;
 
-    public WorkshopTicket(String attendeeId,
-                          double basePrice,
-                          String track) {
-        super(attendeeId, basePrice);
-        this.track = track;
+    void answer(Question q, String answer) {
+        if (!submitted) {
+            total++;
+            if (q.checkAnswer(answer))
+                correct++;
+            System.out.println("Question answered with '" + answer + "'.");
+        }
+    }
+
+    void submit() {
+        submitted = true;
+    }
+
+    void result() {
+        System.out.println("Result: " + correct + "/" + total + " correct");
+    }
+}
+
+class Examination {
+    String name;
+    Question[] questions;
+
+    Examination(String name, Question[] questions) {
+        this.name = name;
+        this.questions = questions;
+    }
+
+    Attempt start() {
+        System.out.println("Examination '" + name + "' started.");
+        return new Attempt();
     }
 }
 
 public class F1 {
     public static void main(String[] args) {
 
-        WorkshopTicket w =
-            new WorkshopTicket("STU2", 1200, "AI/ML");
-
-        w.pay(500);
-
-        System.out.println(w.getBalanceDue());
-
-        String[] ids = {
-            "STU1", "ST1", "STU2", " ", "STU3"
+        Question[] q = {
+            new MCQ("Q1", "A"),
+            new MCQ("Q2", "B")
         };
 
+        Examination exam =
+            new Examination("Math Quiz", q);
+
+        Attempt attempt = exam.start();
+
+        attempt.answer(q[0], "A");
+        attempt.answer(q[1], "C");
+
+        attempt.submit();
+
         System.out.println(
-            EventTicket.registerBatch(ids, 500)
+            "Examination '" + exam.name +
+            "' submitted successfully."
         );
+
+        attempt.result();
     }
 }
