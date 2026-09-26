@@ -1,59 +1,101 @@
-class BookInventory {
+abstract class ServiceableVehicle {
 
-    private int copiesTotal;
-    private int copiesAvailable;
+    private double mileage;
 
-    BookInventory(int copiesTotal) {
+    public abstract String performMaintenance();
 
-        if (copiesTotal <= 0)
+    double getMileage() {
+        return mileage;
+    }
+
+    void addMileage(double km) {
+
+        if (km < 0)
             throw new IllegalArgumentException(
-                "Invalid total copies"
+                "Mileage cannot be negative"
             );
 
-        this.copiesTotal = copiesTotal;
-        this.copiesAvailable = copiesTotal;
+        mileage += km;
+    }
+}
+
+interface Insurable {
+    String getInsuranceInfo();
+}
+
+class Forklift extends ServiceableVehicle
+        implements Insurable {
+
+    protected String assetTag;
+
+    public Forklift(String assetTag) {
+        this.assetTag = assetTag;
     }
 
-    void checkOut() {
-
-        if (copiesAvailable > 0)
-            copiesAvailable--;
+    @Override
+    public String performMaintenance() {
+        return "Forklift " + assetTag +
+               ": hydraulic and fork inspection complete";
     }
 
-    void checkIn() {
+    @Override
+    public String getInsuranceInfo() {
+        return "Insured under fleet policy - Asset "
+               + assetTag;
+    }
+}
 
-        if (copiesAvailable < copiesTotal)
-            copiesAvailable++;
+class HeavyDutyForklift extends Forklift {
+
+    public HeavyDutyForklift(String assetTag) {
+        super(assetTag);
     }
 
-    int getCopiesAvailable() {
-        return copiesAvailable;
+    @Override
+    public String performMaintenance() {
+
+        return super.performMaintenance() +
+               " | high-pressure hydraulic check complete";
     }
 }
 
 public class F3 {
 
+    static String getInsuranceIfApplicable(
+            ServiceableVehicle v) {
+
+        if (v instanceof Insurable) {
+
+            Insurable i = (Insurable) v;
+
+            return i.getInsuranceInfo();
+        }
+
+        return "No insurance record exists";
+    }
+
     public static void main(String[] args) {
 
-        BookInventory b =
-            new BookInventory(3);
+        Forklift f =
+            new Forklift("FL-22");
 
-        b.checkOut();
-        b.checkOut();
-        b.checkOut();
-        b.checkOut();
+        f.addMileage(120);
+
+        System.out.println(f.getMileage());
 
         System.out.println(
-            b.getCopiesAvailable()
+            f.performMaintenance()
         );
 
-        b.checkIn();
-        b.checkIn();
-        b.checkIn();
-        b.checkIn();
+        HeavyDutyForklift hd =
+            new HeavyDutyForklift("HD-9");
 
         System.out.println(
-            b.getCopiesAvailable()
+            hd.performMaintenance()
+        );
+
+        System.out.println(
+            getInsuranceIfApplicable(f)
         );
     }
 }

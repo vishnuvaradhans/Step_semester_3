@@ -1,124 +1,97 @@
-class AccessChecker {
+abstract class Shape {
 
-    static String classifyAccess(String fieldModifier, String accessorContext) {
+    private static int count = 0;
+    private final String shapeId;
 
-        if (accessorContext.equals("SAME_CLASS"))
-            return "ALLOWED";
-
-        if (accessorContext.equals("SAME_PACKAGE")) {
-            if (fieldModifier.equals("private"))
-                return "DENIED";
-            return "ALLOWED";
-        }
-
-        if (accessorContext.equals("DIFFERENT_PACKAGE")) {
-            if (fieldModifier.equals("public"))
-                return "ALLOWED";
-            return "DENIED";
-        }
-
-        return "DENIED";
+    Shape() {
+        count++;
+        shapeId = "SH-" + count;
     }
 
-    static String summarizeByModifier(String[][] attempts) {
+    public abstract double calculateArea();
 
-        String[] modifiers = {
-            "private", "default", "protected", "public"
-        };
+    void scale(double factor) {
+    }
 
-        StringBuilder result = new StringBuilder();
+    void scale(double xFactor, double yFactor) {
+    }
 
-        for (int i = 0; i < modifiers.length; i++) {
-
-            int allowed = 0;
-            int denied = 0;
-
-            for (String[] attempt : attempts) {
-
-                if (attempt[0].equals(modifiers[i])) {
-
-                    if (classifyAccess(
-                            attempt[0],
-                            attempt[1]).equals("ALLOWED"))
-                        allowed++;
-                    else
-                        denied++;
-                }
-            }
-
-            if (i > 0)
-                result.append(" | ");
-
-            result.append(modifiers[i])
-                  .append(": ")
-                  .append(allowed)
-                  .append(" allowed / ")
-                  .append(denied)
-                  .append(" denied");
-        }
-
-        return result.toString();
+    String getShapeId() {
+        return shapeId;
     }
 }
 
-class LibraryMember {
+class CircleShape extends Shape {
 
-    private String membershipId;
-    String branchCode;
-    protected double finesOwed;
-    public String displayName;
+    private double radius;
 
-    public LibraryMember(String membershipId,
-                         String branchCode,
-                         double finesOwed,
-                         String displayName) {
+    public CircleShape(double radius) {
+        this.radius = radius;
+    }
 
-        if (membershipId == null ||
-            membershipId.trim().isEmpty() ||
-            membershipId.trim().length() < 4) {
+    @Override
+    public double calculateArea() {
+        return Math.PI * radius * radius;
+    }
 
-            throw new IllegalArgumentException(
-                "Invalid membership ID"
-            );
-        }
+    @Override
+    void scale(double factor) {
+        radius *= factor;
+    }
 
-        this.membershipId = membershipId.trim();
-        this.branchCode = branchCode;
-        this.finesOwed = finesOwed;
-        this.displayName = displayName;
+    @Override
+    void scale(double xFactor, double yFactor) {
+        scale(xFactor);
+        scale(yFactor);
+    }
+}
+
+class SquareShape extends Shape {
+
+    private double side;
+
+    public SquareShape(double side) {
+        this.side = side;
+    }
+
+    @Override
+    public double calculateArea() {
+        return side * side;
+    }
+
+    @Override
+    void scale(double factor) {
+        side *= factor;
+    }
+
+    @Override
+    void scale(double xFactor, double yFactor) {
+        scale(xFactor);
+        scale(yFactor);
     }
 }
 
 public class F1 {
 
+    static void printArea(Shape s) {
+        System.out.println(s.calculateArea());
+    }
+
     public static void main(String[] args) {
 
-        System.out.println(
-            AccessChecker.classifyAccess(
-                "private",
-                "SAME_CLASS"
-            )
-        );
+        CircleShape c = new CircleShape(5.0);
+        SquareShape sq = new SquareShape(4.0);
 
-        System.out.println(
-            AccessChecker.classifyAccess(
-                "protected",
-                "DIFFERENT_PACKAGE"
-            )
-        );
+        System.out.println(c.calculateArea());
+        System.out.println(sq.calculateArea());
 
-        String[][] attempts = {
-            {"private", "SAME_CLASS"},
-            {"private", "SAME_PACKAGE"},
-            {"default", "SAME_PACKAGE"},
-            {"default", "DIFFERENT_PACKAGE"},
-            {"protected", "SAME_PACKAGE"},
-            {"protected", "SAME_CLASS"},
-            {"public", "DIFFERENT_PACKAGE"}
-        };
+        sq.scale(2.0);
 
-        System.out.println(
-            AccessChecker.summarizeByModifier(attempts)
-        );
+        System.out.println(sq.calculateArea());
+
+        printArea(c);
+
+        System.out.println(c.getShapeId());
+        System.out.println(sq.getShapeId());
     }
 }

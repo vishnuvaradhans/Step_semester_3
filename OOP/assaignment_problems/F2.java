@@ -1,88 +1,81 @@
-class AccessChecker {
+interface Exportable {
+    String exportData();
+}
 
-    static String classifyAccess(String fieldModifier,
-                                 String accessorContext) {
+class ExportCounter {
 
-        if (accessorContext.equals("SAME_CLASS"))
-            return "ALLOWED";
+    private static int totalExports = 0;
 
-        if (accessorContext.equals("SAME_PACKAGE")) {
-            if (fieldModifier.equals("private"))
-                return "DENIED";
-
-            return "ALLOWED";
-        }
-
-        if (accessorContext.equals("DIFFERENT_PACKAGE")) {
-            return fieldModifier.equals("public")
-                    ? "ALLOWED"
-                    : "DENIED";
-        }
-
-        if (accessorContext.equals(
-                "SUBCLASS_DIFFERENT_PACKAGE_OWN_TYPE")) {
-
-            if (fieldModifier.equals("public") ||
-                fieldModifier.equals("protected"))
-                return "ALLOWED";
-
-            return "DENIED";
-        }
-
-        if (accessorContext.equals(
-                "SUBCLASS_DIFFERENT_PACKAGE_PARENT_TYPE")) {
-
-            return fieldModifier.equals("public")
-                    ? "ALLOWED"
-                    : "DENIED";
-        }
-
-        return "DENIED";
+    static void increment() {
+        totalExports++;
     }
 
-    static String describeContext(String accessorContext) {
+    static int getTotalExports() {
+        return totalExports;
+    }
+}
 
-        String[] words =
-            accessorContext.toLowerCase().split("_");
+class ReportGenerator implements Exportable {
 
-        StringBuilder result = new StringBuilder();
+    private String reportName;
 
-        for (String word : words) {
+    public ReportGenerator(String reportName) {
+        this.reportName = reportName;
+    }
 
-            result.append(
-                Character.toUpperCase(word.charAt(0))
-            );
+    @Override
+    public String exportData() {
+        ExportCounter.increment();
 
-            result.append(word.substring(1));
-            result.append(" ");
-        }
+        return "Exported report: " + reportName;
+    }
+}
 
-        return result.toString().trim();
+class UserProfile implements Exportable {
+
+    private String username;
+
+    public UserProfile(String username) {
+        this.username = username;
+    }
+
+    @Override
+    public String exportData() {
+        ExportCounter.increment();
+
+        return "Exported profile: " + username;
     }
 }
 
 public class F2 {
 
+    static void exportAll(Exportable[] items) {
+
+        for (Exportable item : items) {
+            System.out.println(item.exportData());
+        }
+    }
+
+    static int getTotalExports() {
+        return ExportCounter.getTotalExports();
+    }
+
     public static void main(String[] args) {
 
-        System.out.println(
-            AccessChecker.classifyAccess(
-                "protected",
-                "SUBCLASS_DIFFERENT_PACKAGE_OWN_TYPE"
-            )
-        );
+        ReportGenerator r =
+            new ReportGenerator("Sales Q1");
 
-        System.out.println(
-            AccessChecker.classifyAccess(
-                "protected",
-                "SUBCLASS_DIFFERENT_PACKAGE_PARENT_TYPE"
-            )
-        );
+        UserProfile u =
+            new UserProfile("jane_doe");
 
-        System.out.println(
-            AccessChecker.describeContext(
-                "SUBCLASS_DIFFERENT_PACKAGE_OWN_TYPE"
-            )
-        );
+        System.out.println(r.exportData());
+
+        System.out.println(u.exportData());
+
+        Exportable ref = r;
+
+        exportAll(new Exportable[]{ref, u});
+
+        System.out.println(getTotalExports());
     }
 }

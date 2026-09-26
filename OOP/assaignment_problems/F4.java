@@ -1,91 +1,109 @@
-class LibraryMember {
+interface Attackable {
 
-    private String membershipId;
-    private String name;
-    private boolean premiumMember;
-    private String securityAnswer;
+    String attack();
 
-    public LibraryMember() {
-        this(null, null);
-    }
+    String attack(String weaponName);
+}
 
-    public LibraryMember(String name) {
-        this(null, name);
-    }
+interface Defendable {
+    String defend();
+}
 
-    public LibraryMember(String membershipId,
-                         String name) {
+abstract class GameCharacter {
 
-        this.membershipId = membershipId;
-        this.name = name;
-        this.premiumMember = false;
-    }
+    private static int count = 0;
+    private final String characterId;
 
-    public String getMembershipId() {
-        return membershipId;
-    }
+    protected String name;
 
-    public void setMembershipId(String id) {
+    GameCharacter(String name) {
 
-        if (membershipId == null)
-            membershipId = id;
-    }
+        count++;
 
-    public String getName() {
-        return name;
-    }
+        characterId = "CHAR-" + count;
 
-    public void setName(String name) {
         this.name = name;
     }
 
-    public boolean isPremiumMember() {
-        return premiumMember;
+    public abstract String getSpecialMove();
+
+    String getCharacterId() {
+        return characterId;
+    }
+}
+
+class Warrior extends GameCharacter
+        implements Attackable, Defendable {
+
+    public Warrior(String name) {
+        super(name);
     }
 
-    public void setPremiumMember(boolean premium) {
-        this.premiumMember = premium;
+    @Override
+    public String attack() {
+        return name + " strikes with a blade";
     }
 
-    public void setSecurityAnswer(String answer) {
+    @Override
+    public String attack(String weaponName) {
+        return name + " strikes with an " +
+               weaponName;
+    }
 
-        if (answer != null)
-            securityAnswer =
-                Integer.toString(answer.hashCode());
+    @Override
+    public String defend() {
+        return name + " raises a shield";
+    }
+
+    @Override
+    public String getSpecialMove() {
+        return name + " unleashes Whirlwind Slash";
+    }
+}
+
+class Trap implements Defendable {
+
+    private String trapType;
+
+    public Trap(String trapType) {
+        this.trapType = trapType;
+    }
+
+    @Override
+    public String defend() {
+        return trapType + " triggers automatically";
     }
 }
 
 public class F4 {
 
+    static void resolveDefense(
+            Defendable[] combatants) {
+
+        for (Defendable c : combatants) {
+            System.out.println(c.defend());
+        }
+    }
+
     public static void main(String[] args) {
 
-        LibraryMember m1 =
-            new LibraryMember("Priya Nair");
+        Warrior w =
+            new Warrior("Kael");
 
+        System.out.println(w.attack());
         System.out.println(
-            m1.getMembershipId()
+            w.attack("Iron Sword")
         );
+        System.out.println(w.defend());
+        System.out.println(w.getSpecialMove());
 
-        LibraryMember m2 =
-            new LibraryMember(
-                "LIB-8841",
-                "Priya Nair"
-            );
+        Trap t =
+            new Trap("Spike Pit");
 
-        System.out.println(
-            m2.getMembershipId()
+        System.out.println(t.defend());
+
+        resolveDefense(
+            new Defendable[]{w, t}
         );
-
-        LibraryMember m3 =
-            new LibraryMember();
-
-        m3.setMembershipId("LIB-8841");
-        m3.setMembershipId("FAKE-0000");
-
-        System.out.println(
-            m3.getMembershipId()
-        );
-
-        m3.setSecurityAnswer("Blue");
     }
 }

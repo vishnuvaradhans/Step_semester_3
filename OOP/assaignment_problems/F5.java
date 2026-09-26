@@ -1,177 +1,154 @@
-class LoanReceipt {
+abstract class HomeDevice {
 
-    /*
-     * The sheet also asks for ReferenceOnlyLoanReceipt
-     * to extend LoanReceipt, so LoanReceipt cannot be
-     * declared final in compilable Java.
-     */
+    private static int count = 1000;
+    private final String serialNumber;
 
-    private final String memberId;
-    private final String[] bookIds;
-
-    public LoanReceipt(String memberId,
-                       String[] bookIds) {
-
-        if (memberId == null || bookIds == null)
-            throw new IllegalArgumentException();
-
-        for (String id : bookIds) {
-
-            if (!isValidBookId(id))
-                throw new IllegalArgumentException(
-                    "Invalid book ID"
-                );
-        }
-
-        this.memberId = memberId;
-        this.bookIds = bookIds.clone();
+    HomeDevice() {
+        count++;
+        serialNumber = "HD-" + count;
     }
 
-    private static boolean isValidBookId(String id) {
+    public abstract String activate();
 
-        if (id == null || id.length() != 6)
-            return false;
-
-        if (id.charAt(0) != 'B' ||
-            id.charAt(1) != 'K' ||
-            id.charAt(2) != '-')
-            return false;
-
-        for (int i = 3; i < 6; i++) {
-            if (!Character.isDigit(id.charAt(i)))
-                return false;
-        }
-
-        return true;
-    }
-
-    public String getMemberId() {
-        return memberId;
-    }
-
-    public String[] getBookIds() {
-        return bookIds.clone();
-    }
-
-    LoanReceipt withCorrectedBookId(
-            int index,
-            String newId) {
-
-        if (index < 0 ||
-            index >= bookIds.length ||
-            !isValidBookId(newId)) {
-
-            throw new IllegalArgumentException();
-        }
-
-        String[] newIds = bookIds.clone();
-
-        newIds[index] = newId;
-
-        return new LoanReceipt(
-            memberId,
-            newIds
-        );
+    String getSerialNumber() {
+        return serialNumber;
     }
 }
 
-class ReferenceOnlyLoanReceipt
-        extends LoanReceipt {
+interface RemoteControllable {
+    String connect(String appId);
+}
 
-    private final String roomNumber;
+interface EnergyTrackable {
+    double getConsumptionWatts();
+}
 
-    public ReferenceOnlyLoanReceipt(
-            String memberId,
-            String[] bookIds,
-            String roomNumber) {
+class WashingMachine extends HomeDevice
+        implements RemoteControllable, EnergyTrackable {
 
-        super(memberId, bookIds);
+    private double consumptionWatts;
 
-        this.roomNumber = roomNumber;
+    public WashingMachine(double consumptionWatts) {
+        this.consumptionWatts = consumptionWatts;
     }
 
-    public String getRoomNumber() {
-        return roomNumber;
+    @Override
+    public String activate() {
+        return "Washing machine " +
+               getSerialNumber() +
+               " started a cycle";
+    }
+
+    @Override
+    public String connect(String appId) {
+        return getSerialNumber() +
+               " connected to " + appId;
+    }
+
+    @Override
+    public double getConsumptionWatts() {
+        return consumptionWatts;
+    }
+}
+
+class Refrigerator extends HomeDevice
+        implements EnergyTrackable {
+
+    private double consumptionWatts;
+
+    public Refrigerator(double consumptionWatts) {
+        this.consumptionWatts = consumptionWatts;
+    }
+
+    @Override
+    public String activate() {
+        return "Refrigerator " +
+               getSerialNumber() +
+               " activated";
+    }
+
+    @Override
+    public double getConsumptionWatts() {
+        return consumptionWatts;
+    }
+}
+
+class MobileApp implements RemoteControllable {
+
+    private String appName;
+
+    public MobileApp(String appName) {
+        this.appName = appName;
+    }
+
+    @Override
+    public String connect(String appId) {
+        return appName +
+               " connected to " + appId;
     }
 }
 
 public class F5 {
 
-    static String ledgerName;
+    static void connectAll(
+            RemoteControllable[] items,
+            String appId) {
 
-    static {
-        ledgerName =
-            "PageTurner Nightly Circulation Ledger";
+        for (RemoteControllable item : items) {
+            System.out.println(
+                item.connect(appId)
+            );
+        }
     }
 
-    static String processNightlyCirculation(
-            LoanReceipt[] receipts) {
+    static double getConsumptionIfTrackable(
+            HomeDevice d) {
 
-        int processed = 0;
-        int skipped = 0;
-        int referenceOnly = 0;
-        int regular = 0;
+        if (d instanceof EnergyTrackable) {
 
-        for (LoanReceipt receipt : receipts) {
+            EnergyTrackable e =
+                (EnergyTrackable) d;
 
-            if (receipt == null) {
-                skipped++;
-                continue;
-            }
-
-            processed++;
-
-            if (receipt
-                    instanceof ReferenceOnlyLoanReceipt)
-                referenceOnly++;
-            else
-                regular++;
+            return e.getConsumptionWatts();
         }
 
-        return processed + " processed | " +
-               skipped + " null skipped | " +
-               referenceOnly +
-               " reference-only | " +
-               regular + " regular";
+        return 0;
     }
 
     public static void main(String[] args) {
 
-        LoanReceipt r =
-            new LoanReceipt(
-                "LIB-8841",
-                new String[]{
-                    "BK-100",
-                    "BK-101"
-                }
-            );
+        WashingMachine wm =
+            new WashingMachine(500.0);
 
-        String[] ids = r.getBookIds();
-
-        ids[0] = "HACKED";
+        System.out.println(wm.activate());
 
         System.out.println(
-            r.getBookIds()[0]
+            wm.connect("HomeConnect")
         );
 
-        LoanReceipt[] receipts = {
-
-            new ReferenceOnlyLoanReceipt(
-                "LIB-001",
-                new String[]{"BK-200"},
-                "Reading Room 3"
-            ),
-
-            null,
-
-            new LoanReceipt(
-                "LIB-002",
-                new String[]{"BK-201"}
-            )
-        };
+        Refrigerator fridge =
+            new Refrigerator(150.0);
 
         System.out.println(
-            processNightlyCirculation(receipts)
+            getConsumptionIfTrackable(fridge)
+        );
+
+        MobileApp app =
+            new MobileApp("HomeConnect App");
+
+        System.out.println(
+            app.connect("HomeConnect")
+        );
+
+        HomeDevice ref = wm;
+
+        System.out.println(
+            getConsumptionIfTrackable(ref)
+        );
+
+        connectAll(
+            new RemoteControllable[]{wm, app},
+            "HomeConnect"
         );
     }
 }
