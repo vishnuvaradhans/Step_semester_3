@@ -1,80 +1,73 @@
-class RaceEntry {
+abstract class Question {
+    String question;
+    String answer;
 
-    protected String bibNumber;
-    protected double entryFee;
-    protected double balanceDue;
-
-    public RaceEntry(String bibNumber, double entryFee) {
-
-        if (bibNumber == null ||
-            bibNumber.trim().length() < 4) {
-            throw new IllegalArgumentException("Invalid bib number");
-        }
-
-        this.bibNumber = bibNumber;
-        this.entryFee = entryFee;
-        this.balanceDue = entryFee;
+    Question(String question, String answer) {
+        this.question = question;
+        this.answer = answer;
     }
 
-    public void pay(double amount) {
-        balanceDue -= amount;
+    abstract boolean checkAnswer(String ans);
+}
+
+class MCQ extends Question {
+    MCQ(String question, String answer) {
+        super(question, answer);
     }
 
-    public double getBalanceDue() {
-        return balanceDue;
+    boolean checkAnswer(String ans) {
+        return answer.equals(ans);
     }
 }
 
-class RunnerEntry extends RaceEntry {
+class Student {
+    String name;
 
-    private String category;
+    Student(String name) {
+        this.name = name;
+    }
+}
 
-    public RunnerEntry(
-            String bibNumber,
-            double entryFee,
-            String category) {
+class Attempt {
+    Student student;
+    int correct = 0;
+    boolean submitted = false;
 
-        super(bibNumber, entryFee);
-        this.category = category;
+    Attempt(Student student) {
+        this.student = student;
+    }
+
+    void answer(Question q, String ans) {
+        if (!submitted) {
+            if (q.checkAnswer(ans))
+                correct++;
+        }
+    }
+
+    void submit(int total) {
+        submitted = true;
+        System.out.println("Examination submitted successfully.");
+        System.out.println("Result: " + correct + "/" + total + " correct");
     }
 }
 
 public class F1 {
-
-    static String registerBatch(
-            String[] bibNumbers,
-            double entryFee) {
-
-        int registered = 0;
-        int rejected = 0;
-
-        for (String bib : bibNumbers) {
-            try {
-                new RaceEntry(bib, entryFee);
-                registered++;
-            } catch (IllegalArgumentException e) {
-                rejected++;
-            }
-        }
-
-        return "Registered: " + registered
-                + " | Rejected: " + rejected;
-    }
-
     public static void main(String[] args) {
+        Student s = new Student("John");
 
-        RunnerEntry r =
-                new RunnerEntry("BIB2001", 80, "Open 10K");
+        Question q1 = new MCQ("Question 1", "A");
+        Question q2 = new MCQ("Question 2", "B");
 
-        r.pay(30);
+        Attempt a = new Attempt(s);
 
-        System.out.println(r.getBalanceDue());
+        System.out.println("Examination started by " + s.name);
 
-        System.out.println(
-            registerBatch(
-                new String[]{"BIB1", "B1", "BIB2"},
-                80
-            )
-        );
+        a.answer(q1, "A");
+        System.out.println("Question 1 answered with 'A'");
+
+        a.answer(q2, "C");
+        System.out.println("Question 2 answered with 'C'");
+
+        a.submit(2);
     }
 }

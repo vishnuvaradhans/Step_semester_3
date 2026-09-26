@@ -1,128 +1,75 @@
-class RaceEntry {
+abstract class Employee {
+    String name;
 
-    protected String bibNumber;
-    protected double entryFee;
-    protected double balanceDue;
+    Employee(String name) {
+        this.name = name;
+    }
 
-    public RaceEntry(String bibNumber, double entryFee) {
+    abstract boolean canTakeLeave();
+}
 
-        if (bibNumber == null ||
-            bibNumber.trim().length() < 4) {
-            throw new IllegalArgumentException("Invalid bib number");
+class FullTime extends Employee {
+    FullTime(String name) {
+        super(name);
+    }
+
+    boolean canTakeLeave() {
+        return true;
+    }
+}
+
+class PartTime extends Employee {
+    PartTime(String name) {
+        super(name);
+    }
+
+    boolean canTakeLeave() {
+        return true;
+    }
+}
+
+class LeaveRequest {
+    Employee employee;
+    String status = "Pending";
+
+    LeaveRequest(Employee employee) {
+        this.employee = employee;
+    }
+
+    void approve() {
+        if (status.equals("Pending")) {
+            status = "Approved";
+            System.out.println("Leave request for " +
+                    employee.name + " approved.");
         }
-
-        this.bibNumber = bibNumber;
-        this.entryFee = entryFee;
-        this.balanceDue = entryFee;
     }
 
-    public void pay(double amount) {
-        balanceDue -= amount;
+    void reject() {
+        if (status.equals("Pending")) {
+            status = "Rejected";
+        }
     }
 
-    public double getBalanceDue() {
-        return balanceDue;
-    }
-
-    public String announce() {
-        return "Race Entry | Bib: " + bibNumber
-                + " | Balance: " + balanceDue;
-    }
-}
-
-class RunnerEntry extends RaceEntry {
-
-    private String category;
-
-    public RunnerEntry(
-            String bibNumber,
-            double entryFee,
-            String category) {
-
-        super(bibNumber, entryFee);
-        this.category = category;
-    }
-
-    @Override
-    public String announce() {
-        return "Runner Entry | Bib: " + bibNumber
-                + " | Category: " + category
-                + " | Balance: " + balanceDue;
-    }
-}
-
-class RelayTeamEntry extends RaceEntry {
-
-    private int teamSize;
-
-    public RelayTeamEntry(
-            String bibNumber,
-            double entryFee,
-            int teamSize) {
-
-        super(bibNumber, entryFee);
-        this.teamSize = teamSize;
-    }
-
-    public int getTeamSize() {
-        return teamSize;
-    }
-
-    @Override
-    public String announce() {
-        return "Relay Team | Bib: " + bibNumber
-                + " | Team Size: " + teamSize
-                + " | Balance: " + balanceDue;
+    void makePending() {
+        if (!status.equals("Pending")) {
+            System.out.println("Cannot change status: " +
+                    status + " request cannot revert to Pending.");
+        }
     }
 }
 
 public class F4 {
-
-    static String announceAll(RaceEntry[] entries) {
-
-        StringBuilder result = new StringBuilder();
-
-        for (RaceEntry entry : entries) {
-
-            result.append(entry.announce());
-
-            if (entry instanceof RelayTeamEntry) {
-
-                RelayTeamEntry relay =
-                        (RelayTeamEntry) entry;
-
-                result.append(
-                    " [Team size via downcast: "
-                    + relay.getTeamSize() + "]"
-                );
-            }
-
-            result.append(" | ");
-        }
-
-        return result.toString();
-    }
-
     public static void main(String[] args) {
+        Employee e = new FullTime("John Doe");
 
-        RunnerEntry runner =
-                new RunnerEntry(
-                        "BIB2001",
-                        80,
-                        "Open 10K");
+        LeaveRequest l = new LeaveRequest(e);
 
-        runner.pay(30);
+        System.out.println("Leave request submitted by " + e.name);
+        System.out.println("Status: " + l.status);
 
-        RelayTeamEntry relay =
-                new RelayTeamEntry(
-                        "BIB4001",
-                        300,
-                        4);
+        l.approve();
+        System.out.println("Status: " + l.status);
 
-        System.out.println(
-            announceAll(
-                new RaceEntry[]{runner, relay}
-            )
-        );
+        l.makePending();
     }
 }

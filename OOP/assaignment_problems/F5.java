@@ -1,180 +1,71 @@
-class RaceEntry {
+interface PaymentMethod {
+    boolean pay(double amount);
+}
 
-    private static int bibCounter = 0;
-
-    protected String bibNumber;
-    protected double entryFee;
-    protected double balanceDue;
-
-    private final int entryCode;
-
-    public RaceEntry(String bibNumber, double entryFee) {
-
-        if (bibNumber == null ||
-            bibNumber.trim().length() < 4) {
-            throw new IllegalArgumentException("Invalid bib number");
-        }
-
-        this.bibNumber = bibNumber;
-        this.entryFee = entryFee;
-        this.balanceDue = entryFee;
-
-        bibCounter++;
-        entryCode = bibCounter;
-    }
-
-    public void pay(double amount) {
-        balanceDue -= amount;
-    }
-
-    public void pay(double amount, String mode) {
-
-        pay(amount);
-
-        System.out.println("Paying via " + mode);
-    }
-
-    public double getBalanceDue() {
-        return balanceDue;
-    }
-
-    static boolean isValidDiscountCode(String code) {
-
-        if (code == null || code.length() != 5) {
-            return false;
-        }
-
-        if (code.charAt(0) != 'M') {
-            return false;
-        }
-
-        if (!Character.isDigit(code.charAt(1)) ||
-            !Character.isDigit(code.charAt(2)) ||
-            !Character.isDigit(code.charAt(3))) {
-            return false;
-        }
-
-        if (!Character.isUpperCase(code.charAt(4))) {
-            return false;
-        }
-
+class CreditCard implements PaymentMethod {
+    public boolean pay(double amount) {
+        System.out.println("Payment via Credit Card successful.");
         return true;
     }
+}
 
-    static int getBibCounter() {
-        return bibCounter;
+class DigitalWallet implements PaymentMethod {
+    public boolean pay(double amount) {
+        System.out.println("Payment via Digital Wallet failed.");
+        return false;
     }
 }
 
-class RunnerEntry extends RaceEntry {
+class LineItem {
+    String item;
+    int quantity;
 
-    public RunnerEntry(
-            String bibNumber,
-            double entryFee,
-            String category) {
-
-        super(bibNumber, entryFee);
+    LineItem(String item, int quantity) {
+        this.item = item;
+        this.quantity = quantity;
     }
 }
 
-class EliteRunnerEntry extends RunnerEntry {
+class Order {
+    LineItem item;
+    String status = "Pending Payment";
 
-    public EliteRunnerEntry(
-            String bibNumber,
-            double entryFee,
-            String category,
-            double sponsorBonus) {
-
-        super(bibNumber, entryFee, category);
+    void addItem(String name, int quantity) {
+        item = new LineItem(name, quantity);
+        System.out.println("Added " + name +
+                " (Qty " + quantity + ")");
     }
-}
 
-class RelayTeamEntry extends RaceEntry {
+    void place(PaymentMethod payment) {
+        if (item == null) {
+            System.out.println(
+                    "Cannot place order: Order must contain at least one item.");
+            return;
+        }
 
-    private int teamSize;
+        System.out.println("Order placed successfully.");
 
-    public RelayTeamEntry(
-            String bibNumber,
-            double entryFee,
-            int teamSize) {
+        if (payment.pay(100)) {
+            status = "Paid";
+        }
 
-        super(bibNumber, entryFee);
-        this.teamSize = teamSize;
+        System.out.println("Order status: " + status);
     }
 }
 
 public class F5 {
-
-    static String settleNight(RaceEntry[] entries) {
-
-        int processed = 0;
-        int nullSkipped = 0;
-        int relay = 0;
-        int individual = 0;
-
-        for (RaceEntry entry : entries) {
-
-            if (entry == null) {
-                nullSkipped++;
-                continue;
-            }
-
-            processed++;
-
-            if (entry instanceof RelayTeamEntry) {
-                relay++;
-            } else {
-                individual++;
-            }
-        }
-
-        return processed + " processed | "
-                + nullSkipped + " null skipped | "
-                + relay + " relay | "
-                + individual + " individual";
-    }
-
     public static void main(String[] args) {
 
-        System.out.println(
-            RaceEntry.isValidDiscountCode("M123A")
-        );
+        Order o1 = new Order();
 
-        System.out.println(
-            RaceEntry.isValidDiscountCode("M12A")
-        );
+        o1.place(new CreditCard());
 
-        System.out.println(
-            RaceEntry.isValidDiscountCode("X123A")
-        );
+        o1.addItem("Pizza", 2);
+        o1.place(new CreditCard());
 
-        EliteRunnerEntry elite =
-                new EliteRunnerEntry(
-                        "BIB3001",
-                        150,
-                        "Elite",
-                        500);
+        Order o2 = new Order();
 
-        RelayTeamEntry relay =
-                new RelayTeamEntry(
-                        "BIB4001",
-                        300,
-                        4);
-
-        elite.pay(10, "UPI");
-
-        System.out.println(
-            RaceEntry.getBibCounter()
-        );
-
-        System.out.println(
-            settleNight(
-                new RaceEntry[]{
-                    elite,
-                    null,
-                    relay
-                }
-            )
-        );
+        o2.addItem("Burger", 1);
+        o2.place(new DigitalWallet());
     }
 }

@@ -1,93 +1,61 @@
-class RaceEntry {
+class Room {
+    String name;
+    boolean available = true;
 
-    protected String bibNumber;
-    protected double entryFee;
-    protected double balanceDue;
-
-    private double[] lateFeeHistory = new double[10];
-    private int lateFeeCount = 0;
-
-    public RaceEntry(String bibNumber, double entryFee) {
-
-        if (bibNumber == null ||
-            bibNumber.trim().length() < 4) {
-            throw new IllegalArgumentException("Invalid bib number");
-        }
-
-        this.bibNumber = bibNumber;
-        this.entryFee = entryFee;
-        this.balanceDue = entryFee;
+    Room(String name) {
+        this.name = name;
     }
 
-    public void pay(double amount) {
-        balanceDue -= amount;
-    }
-
-    protected void applyLateFee(double amount) {
-
-        balanceDue += amount;
-
-        lateFeeHistory[lateFeeCount] = amount;
-        lateFeeCount++;
-    }
-
-    double[] getLateFeeHistory() {
-
-        double[] copy = new double[lateFeeCount];
-
-        for (int i = 0; i < lateFeeCount; i++) {
-            copy[i] = lateFeeHistory[i];
-        }
-
-        return copy;
-    }
-
-    public double getBalanceDue() {
-        return balanceDue;
+    double price(int days) {
+        return days * 200;
     }
 }
 
-class RunnerEntry extends RaceEntry {
+class Reservation {
+    Room room;
+    boolean cancelled = false;
 
-    private String category;
-
-    public RunnerEntry(
-            String bibNumber,
-            double entryFee,
-            String category) {
-
-        super(bibNumber, entryFee);
-        this.category = category;
+    Reservation(Room room) {
+        this.room = room;
     }
 
-    @Override
-    protected void applyLateFee(double amount) {
-        super.applyLateFee(amount * 2);
+    void cancel() {
+        cancelled = true;
+        room.available = true;
+
+        System.out.println("Reservation for " + room.name +
+                " cancelled successfully.");
+    }
+}
+
+class Hotel {
+    void book(Room room, int days) {
+        if (!room.available) {
+            System.out.println("Booking failed: " +
+                    room.name + " is not available.");
+            return;
+        }
+
+        room.available = false;
+
+        System.out.println(room.name + " booked.");
+        System.out.println("Total price: $" + room.price(days));
     }
 }
 
 public class F3 {
-
     public static void main(String[] args) {
+        Room r1 = new Room("Deluxe Room 101");
+        Room r2 = new Room("Standard Room 205");
 
-        RunnerEntry r =
-                new RunnerEntry(
-                        "BIB2001",
-                        80,
-                        "Open 10K");
+        Hotel h = new Hotel();
 
-        r.pay(30);
+        h.book(r1, 4);
+        h.book(r2, 4);
 
-        r.applyLateFee(20);
+        h.book(r1, 4);
 
-        System.out.println(r.getBalanceDue());
-
-        double[] history = r.getLateFeeHistory();
-
-        history[0] = 999;
-
-        double[] actual = r.getLateFeeHistory();
-
-        System.out.println(actual[0]);
+        Reservation res = new Reservation(r1);
+        res.cancel();
     }
 }

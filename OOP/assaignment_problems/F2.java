@@ -1,157 +1,62 @@
-class RaceEntry {
+abstract class Vehicle {
+    String name;
+    boolean available = true;
 
-    protected String bibNumber;
-    protected double entryFee;
-    protected double balanceDue;
+    Vehicle(String name) {
+        this.name = name;
+    }
 
-    public RaceEntry(String bibNumber, double entryFee) {
+    abstract double calculateCharge(int days);
+}
 
-        if (bibNumber == null ||
-            bibNumber.trim().length() < 4) {
-            throw new IllegalArgumentException("Invalid bib number");
+class LuxuryCar extends Vehicle {
+    LuxuryCar(String name) {
+        super(name);
+    }
+
+    double calculateCharge(int days) {
+        return days * 100;
+    }
+}
+
+class StandardCar extends Vehicle {
+    StandardCar(String name) {
+        super(name);
+    }
+
+    double calculateCharge(int days) {
+        return days * 50;
+    }
+}
+
+class RentalService {
+    void rent(Vehicle v, int days) {
+        if (!v.available) {
+            System.out.println(v.name + " is not available.");
+            return;
         }
 
-        this.bibNumber = bibNumber;
-        this.entryFee = entryFee;
-        this.balanceDue = entryFee;
+        v.available = false;
+
+        System.out.println(v.name + " rented for " + days + " days.");
+        System.out.println("Total charge: $" + v.calculateCharge(days));
     }
 
-    public void pay(double amount) {
-        balanceDue -= amount;
-    }
-
-    public double getBalanceDue() {
-        return balanceDue;
-    }
-
-    public String announce() {
-        return "Race Entry | Bib: " + bibNumber
-                + " | Balance: " + balanceDue;
-    }
-}
-
-class RunnerEntry extends RaceEntry {
-
-    protected String category;
-
-    public RunnerEntry(
-            String bibNumber,
-            double entryFee,
-            String category) {
-
-        super(bibNumber, entryFee);
-        this.category = category;
-    }
-
-    @Override
-    public String announce() {
-        return "Runner Entry | Bib: " + bibNumber
-                + " | Category: " + category
-                + " | Balance: " + balanceDue;
-    }
-}
-
-class EliteRunnerEntry extends RunnerEntry {
-
-    private double sponsorBonus;
-
-    public EliteRunnerEntry(
-            String bibNumber,
-            double entryFee,
-            String category,
-            double sponsorBonus) {
-
-        super(bibNumber, entryFee, category);
-        this.sponsorBonus = sponsorBonus;
-    }
-
-    @Override
-    public String announce() {
-        return "Elite Runner | Bib: " + bibNumber
-                + " | Category: " + category
-                + " | Sponsor Bonus: " + sponsorBonus
-                + " | Balance: " + balanceDue;
-    }
-}
-
-class RelayTeamEntry extends RaceEntry {
-
-    private int teamSize;
-
-    public RelayTeamEntry(
-            String bibNumber,
-            double entryFee,
-            int teamSize) {
-
-        super(bibNumber, entryFee);
-        this.teamSize = teamSize;
-    }
-
-    public int getTeamSize() {
-        return teamSize;
-    }
-
-    @Override
-    public String announce() {
-        return "Relay Team | Bib: " + bibNumber
-                + " | Team Size: " + teamSize
-                + " | Balance: " + balanceDue;
+    void returnVehicle(Vehicle v) {
+        v.available = true;
+        System.out.println(v.name + " returned. Now available.");
     }
 }
 
 public class F2 {
-
-    static String classifyGeneration(RaceEntry entry) {
-
-        if (entry instanceof EliteRunnerEntry) {
-            return "Multilevel descendant (3 generations deep)";
-        }
-
-        if (entry instanceof RelayTeamEntry) {
-            return "Hierarchical sibling (independent branch)";
-        }
-
-        return "Base or direct descendant";
-    }
-
-    static double getTotalBalanceDue(RaceEntry[] entries) {
-
-        double total = 0;
-
-        for (RaceEntry entry : entries) {
-            total += entry.getBalanceDue();
-        }
-
-        return total;
-    }
-
     public static void main(String[] args) {
+        Vehicle v1 = new LuxuryCar("Luxury Car A");
+        Vehicle v2 = new StandardCar("Standard Car B");
 
-        RunnerEntry runner =
-                new RunnerEntry("BIB2001", 80, "Open 10K");
+        RentalService r = new RentalService();
 
-        EliteRunnerEntry elite =
-                new EliteRunnerEntry(
-                        "BIB3001",
-                        150,
-                        "Elite Full Marathon",
-                        500);
-
-        RelayTeamEntry relay =
-                new RelayTeamEntry(
-                        "BIB4001", 300, 4);
-
-        System.out.println(runner.announce());
-        System.out.println(elite.announce());
-        System.out.println(relay.announce());
-
-        System.out.println(classifyGeneration(elite));
-        System.out.println(classifyGeneration(relay));
-
-        System.out.println(
-            getTotalBalanceDue(
-                new RaceEntry[]{runner, elite, relay}
-            )
-        );
+        r.rent(v1, 3);
+        r.rent(v2, 5);
+        r.returnVehicle(v1);
     }
 }
