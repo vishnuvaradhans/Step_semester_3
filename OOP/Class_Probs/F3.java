@@ -1,106 +1,37 @@
-class Room {
-    String name;
-    double price;
-    boolean booked = false;
+// F3.java
 
-    Room(String name, double price) {
-        this.name = name;
-        this.price = price;
-    }
-}
-
-class Reservation {
-    Room room;
-    String start;
-    String end;
-    boolean active = true;
-
-    Reservation(Room room, String start, String end) {
-        this.room = room;
-        this.start = start;
-        this.end = end;
-    }
-}
-
-class Hotel {
-
-    boolean available(Room room) {
-        return !room.booked;
-    }
-
-    Reservation book(
-            Room room,
-            String start,
-            String end,
-            int days) {
-
-        if (!available(room)) {
-            System.out.println(
-                "Booking failed: " + room.name +
-                " is not available."
-            );
-            return null;
-        }
-
-        room.booked = true;
-
-        double price = room.price * days;
-
-        System.out.printf(
-            "%s booked from %s to %s. Total price: $%.2f%n",
-            room.name, start, end, price
-        );
-
-        return new Reservation(room, start, end);
-    }
-
-    void cancel(Reservation r) {
-
-        if (r != null && r.active) {
-            r.active = false;
-            r.room.booked = false;
-
-            System.out.println(
-                "Reservation for " + r.room.name +
-                " cancelled successfully."
-            );
-        }
-    }
-}
+import java.util.*;
 
 public class F3 {
     public static void main(String[] args) {
 
-        Room deluxe =
-            new Room("Deluxe Room 101", 200);
+        Scanner sc = new Scanner(System.in);
 
-        Room standard =
-            new Room("Standard Room 205", 150);
+        int n = sc.nextInt();
+        sc.nextLine();
 
-        Hotel hotel = new Hotel();
+        String[] books = new String[n];
 
-        Reservation r1 =
-            hotel.book(
-                deluxe,
-                "2024-12-01",
-                "2024-12-05",
-                4
-            );
+        for (int i = 0; i < n; i++) {
+            books[i] = sc.nextLine();
+        }
 
-        hotel.book(
-            standard,
-            "2024-12-03",
-            "2024-12-07",
-            4
-        );
+        String search = sc.nextLine();
 
-        hotel.book(
-            deluxe,
-            "2024-12-03",
-            "2024-12-07",
-            4
-        );
+        boolean found = false;
 
-        hotel.cancel(r1);
+        for (String book : books) {
+
+            if (book.equalsIgnoreCase(search)) {
+                System.out.println("Book Found");
+                found = true;
+                break;
+            }
+        }
+
+        if (!found)
+            System.out.println("Book Not Found");
+
+        sc.close();
     }
 }

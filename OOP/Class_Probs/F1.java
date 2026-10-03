@@ -1,88 +1,39 @@
+// F1.java
+
 import java.util.*;
-
-abstract class Question {
-    String question;
-    String correctAnswer;
-
-    Question(String question, String correctAnswer) {
-        this.question = question;
-        this.correctAnswer = correctAnswer;
-    }
-
-    abstract boolean checkAnswer(String answer);
-}
-
-class MCQ extends Question {
-    MCQ(String question, String correctAnswer) {
-        super(question, correctAnswer);
-    }
-
-    boolean checkAnswer(String answer) {
-        return correctAnswer.equalsIgnoreCase(answer);
-    }
-}
-
-class Attempt {
-    private boolean submitted = false;
-    private int correct = 0;
-    private int total = 0;
-
-    void answer(Question q, String answer) {
-        if (!submitted) {
-            total++;
-            if (q.checkAnswer(answer))
-                correct++;
-            System.out.println("Question answered with '" + answer + "'.");
-        }
-    }
-
-    void submit() {
-        submitted = true;
-    }
-
-    void result() {
-        System.out.println("Result: " + correct + "/" + total + " correct");
-    }
-}
-
-class Examination {
-    String name;
-    Question[] questions;
-
-    Examination(String name, Question[] questions) {
-        this.name = name;
-        this.questions = questions;
-    }
-
-    Attempt start() {
-        System.out.println("Examination '" + name + "' started.");
-        return new Attempt();
-    }
-}
 
 public class F1 {
     public static void main(String[] args) {
 
-        Question[] q = {
-            new MCQ("Q1", "A"),
-            new MCQ("Q2", "B")
-        };
+        Scanner sc = new Scanner(System.in);
 
-        Examination exam =
-            new Examination("Math Quiz", q);
+        int n = sc.nextInt();
+        int target = sc.nextInt();
 
-        Attempt attempt = exam.start();
+        int[] arr = new int[n];
 
-        attempt.answer(q[0], "A");
-        attempt.answer(q[1], "C");
+        for (int i = 0; i < n; i++)
+            arr[i] = sc.nextInt();
 
-        attempt.submit();
+        boolean found = false;
 
-        System.out.println(
-            "Examination '" + exam.name +
-            "' submitted successfully."
-        );
+        for (int i = 0; i < n; i++) {
+            for (int j = i + 1; j < n; j++) {
 
-        attempt.result();
+                if (arr[i] + arr[j] == target) {
+                    System.out.println(i + " " + j);
+                    found = true;
+                    break;
+                }
+            }
+
+            if (found)
+                break;
+        }
+
+        if (!found)
+            System.out.println("-1");
+
+        sc.close();
     }
 }
