@@ -1,75 +1,67 @@
-abstract class Employee {
-    String name;
-
-    Employee(String name) {
-        this.name = name;
-    }
-
-    abstract boolean canTakeLeave();
-}
-
-class FullTime extends Employee {
-    FullTime(String name) {
-        super(name);
-    }
-
-    boolean canTakeLeave() {
-        return true;
-    }
-}
-
-class PartTime extends Employee {
-    PartTime(String name) {
-        super(name);
-    }
-
-    boolean canTakeLeave() {
-        return true;
-    }
-}
-
-class LeaveRequest {
-    Employee employee;
-    String status = "Pending";
-
-    LeaveRequest(Employee employee) {
-        this.employee = employee;
-    }
-
-    void approve() {
-        if (status.equals("Pending")) {
-            status = "Approved";
-            System.out.println("Leave request for " +
-                    employee.name + " approved.");
-        }
-    }
-
-    void reject() {
-        if (status.equals("Pending")) {
-            status = "Rejected";
-        }
-    }
-
-    void makePending() {
-        if (!status.equals("Pending")) {
-            System.out.println("Cannot change status: " +
-                    status + " request cannot revert to Pending.");
-        }
-    }
-}
-
 public class F4 {
+
+    static int firstGreaterOrEqual(
+            int[] scores,
+            int target) {
+
+        int left = 0;
+        int right = scores.length;
+
+        while (left < right) {
+
+            int mid = left + (right - left) / 2;
+
+            if (scores[mid] >= target)
+                right = mid;
+            else
+                left = mid + 1;
+        }
+
+        return left;
+    }
+
+    static int firstGreater(
+            int[] scores,
+            int target) {
+
+        int left = 0;
+        int right = scores.length;
+
+        while (left < right) {
+
+            int mid = left + (right - left) / 2;
+
+            if (scores[mid] > target)
+                right = mid;
+            else
+                left = mid + 1;
+        }
+
+        return left;
+    }
+
+    static int countInBand(
+            int[] scores,
+            int low,
+            int high) {
+
+        int first = firstGreaterOrEqual(scores, low);
+        int afterLast = firstGreater(scores, high);
+
+        return afterLast - first;
+    }
+
     public static void main(String[] args) {
-        Employee e = new FullTime("John Doe");
 
-        LeaveRequest l = new LeaveRequest(e);
+        int[] scores =
+            {35, 42, 42, 50, 58, 58, 58, 63, 71, 88};
 
-        System.out.println("Leave request submitted by " + e.name);
-        System.out.println("Status: " + l.status);
+        System.out.println(
+            countInBand(scores, 42, 58)
+        );
 
-        l.approve();
-        System.out.println("Status: " + l.status);
-
-        l.makePending();
+        System.out.println(
+            countInBand(scores, 90, 100)
+        );
     }
 }

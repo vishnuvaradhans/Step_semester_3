@@ -1,71 +1,68 @@
-interface PaymentMethod {
-    boolean pay(double amount);
-}
-
-class CreditCard implements PaymentMethod {
-    public boolean pay(double amount) {
-        System.out.println("Payment via Credit Card successful.");
-        return true;
-    }
-}
-
-class DigitalWallet implements PaymentMethod {
-    public boolean pay(double amount) {
-        System.out.println("Payment via Digital Wallet failed.");
-        return false;
-    }
-}
-
-class LineItem {
-    String item;
-    int quantity;
-
-    LineItem(String item, int quantity) {
-        this.item = item;
-        this.quantity = quantity;
-    }
-}
-
-class Order {
-    LineItem item;
-    String status = "Pending Payment";
-
-    void addItem(String name, int quantity) {
-        item = new LineItem(name, quantity);
-        System.out.println("Added " + name +
-                " (Qty " + quantity + ")");
-    }
-
-    void place(PaymentMethod payment) {
-        if (item == null) {
-            System.out.println(
-                    "Cannot place order: Order must contain at least one item.");
-            return;
-        }
-
-        System.out.println("Order placed successfully.");
-
-        if (payment.pay(100)) {
-            status = "Paid";
-        }
-
-        System.out.println("Order status: " + status);
-    }
-}
+import java.util.*;
 
 public class F5 {
+
+    static List<Integer> auditRoute(int[][] grid) {
+
+        List<Integer> result =
+            new ArrayList<>();
+
+        int top = 0;
+        int bottom = grid.length - 1;
+
+        int left = 0;
+        int right = grid[0].length - 1;
+
+        while (top <= bottom && left <= right) {
+
+            // Top row
+            for (int j = left; j <= right; j++) {
+                result.add(grid[top][j]);
+            }
+
+            top++;
+
+            // Right column
+            for (int i = top; i <= bottom; i++) {
+                result.add(grid[i][right]);
+            }
+
+            right--;
+
+            // Bottom row
+            if (top <= bottom) {
+
+                for (int j = right; j >= left; j--) {
+                    result.add(grid[bottom][j]);
+                }
+
+                bottom--;
+            }
+
+            // Left column
+            if (left <= right) {
+
+                for (int i = bottom; i >= top; i--) {
+                    result.add(grid[i][left]);
+                }
+
+                left++;
+            }
+        }
+
+        return result;
+    }
+
     public static void main(String[] args) {
 
-        Order o1 = new Order();
+        int[][] grid = {
+            {1, 2, 3, 4},
+            {5, 6, 7, 8},
+            {9, 10, 11, 12}
+        };
 
-        o1.place(new CreditCard());
-
-        o1.addItem("Pizza", 2);
-        o1.place(new CreditCard());
-
-        Order o2 = new Order();
-
-        o2.addItem("Burger", 1);
-        o2.place(new DigitalWallet());
+        System.out.println(
+            auditRoute(grid)
+        );
     }
 }

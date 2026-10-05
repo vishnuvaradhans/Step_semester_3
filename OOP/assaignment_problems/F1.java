@@ -1,73 +1,53 @@
-abstract class Question {
-    String question;
-    String answer;
-
-    Question(String question, String answer) {
-        this.question = question;
-        this.answer = answer;
-    }
-
-    abstract boolean checkAnswer(String ans);
-}
-
-class MCQ extends Question {
-    MCQ(String question, String answer) {
-        super(question, answer);
-    }
-
-    boolean checkAnswer(String ans) {
-        return answer.equals(ans);
-    }
-}
-
-class Student {
-    String name;
-
-    Student(String name) {
-        this.name = name;
-    }
-}
-
-class Attempt {
-    Student student;
-    int correct = 0;
-    boolean submitted = false;
-
-    Attempt(Student student) {
-        this.student = student;
-    }
-
-    void answer(Question q, String ans) {
-        if (!submitted) {
-            if (q.checkAnswer(ans))
-                correct++;
-        }
-    }
-
-    void submit(int total) {
-        submitted = true;
-        System.out.println("Examination submitted successfully.");
-        System.out.println("Result: " + correct + "/" + total + " correct");
-    }
-}
+import java.util.*;
 
 public class F1 {
+
+    static List<Long> footfallReport(
+            int[] visitors,
+            int[][] queries) {
+
+        int n = visitors.length;
+
+        long[] prefix = new long[n];
+        prefix[0] = visitors[0];
+
+        for (int i = 1; i < n; i++) {
+            prefix[i] = prefix[i - 1] + visitors[i];
+        }
+
+        List<Long> result = new ArrayList<>();
+
+        for (int[] query : queries) {
+
+            int start = query[0];
+            int end = query[1];
+
+            long sum;
+
+            if (start == 0)
+                sum = prefix[end];
+            else
+                sum = prefix[end] - prefix[start - 1];
+
+            result.add(sum);
+        }
+
+        return result;
+    }
+
     public static void main(String[] args) {
-        Student s = new Student("John");
 
-        Question q1 = new MCQ("Question 1", "A");
-        Question q2 = new MCQ("Question 2", "B");
+        int[] visitors = {12, 7, 3, 9, 15, 4, 8};
 
-        Attempt a = new Attempt(s);
+        int[][] queries = {
+            {0, 2},
+            {2, 5},
+            {4, 6},
+            {3, 3}
+        };
 
-        System.out.println("Examination started by " + s.name);
-
-        a.answer(q1, "A");
-        System.out.println("Question 1 answered with 'A'");
-
-        a.answer(q2, "C");
-        System.out.println("Question 2 answered with 'C'");
-
-        a.submit(2);
+        System.out.println(
+            footfallReport(visitors, queries)
+        );
     }
 }

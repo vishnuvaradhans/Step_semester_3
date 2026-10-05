@@ -1,62 +1,51 @@
-abstract class Vehicle {
-    String name;
-    boolean available = true;
-
-    Vehicle(String name) {
-        this.name = name;
-    }
-
-    abstract double calculateCharge(int days);
-}
-
-class LuxuryCar extends Vehicle {
-    LuxuryCar(String name) {
-        super(name);
-    }
-
-    double calculateCharge(int days) {
-        return days * 100;
-    }
-}
-
-class StandardCar extends Vehicle {
-    StandardCar(String name) {
-        super(name);
-    }
-
-    double calculateCharge(int days) {
-        return days * 50;
-    }
-}
-
-class RentalService {
-    void rent(Vehicle v, int days) {
-        if (!v.available) {
-            System.out.println(v.name + " is not available.");
-            return;
-        }
-
-        v.available = false;
-
-        System.out.println(v.name + " rented for " + days + " days.");
-        System.out.println("Total charge: $" + v.calculateCharge(days));
-    }
-
-    void returnVehicle(Vehicle v) {
-        v.available = true;
-        System.out.println(v.name + " returned. Now available.");
-    }
-}
+import java.util.*;
 
 public class F2 {
+
+    static int[] longestStreak(
+            int[] costs,
+            long budget) {
+
+        int left = 0;
+        long sum = 0;
+
+        int maxLength = 0;
+        int maxStart = -1;
+
+        for (int right = 0; right < costs.length; right++) {
+
+            sum += costs[right];
+
+            while (sum > budget && left <= right) {
+                sum -= costs[left];
+                left++;
+            }
+
+            int length = right - left + 1;
+
+            if (length > maxLength) {
+                maxLength = length;
+                maxStart = left;
+            }
+        }
+
+        if (maxLength == 0)
+            return new int[]{0, -1};
+
+        return new int[]{maxLength, maxStart};
+    }
+
     public static void main(String[] args) {
-        Vehicle v1 = new LuxuryCar("Luxury Car A");
-        Vehicle v2 = new StandardCar("Standard Car B");
 
-        RentalService r = new RentalService();
+        int[] costs = {4, 2, 1, 7, 3, 1, 2, 1, 5};
 
-        r.rent(v1, 3);
-        r.rent(v2, 5);
-        r.returnVehicle(v1);
+        long budget = 8;
+
+        int[] result =
+            longestStreak(costs, budget);
+
+        System.out.println(
+            "(" + result[0] + ", " + result[1] + ")"
+        );
     }
 }
