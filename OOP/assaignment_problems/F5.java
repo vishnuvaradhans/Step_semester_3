@@ -1,68 +1,74 @@
 import java.util.*;
 
-public class F5 {
+public class F5
+{
+    static int[][] exitDistance(char[][] plan)
+    {
+        int m = plan.length;
+        int n = plan[0].length;
 
-    static List<Integer> auditRoute(int[][] grid) {
+        int[][] dist = new int[m][n];
+        Queue<int[]> q = new LinkedList<>();
 
-        List<Integer> result =
-            new ArrayList<>();
+        for (int i = 0; i < m; i++)
+        {
+            for (int j = 0; j < n; j++)
+            {
+                dist[i][j] = -1;
 
-        int top = 0;
-        int bottom = grid.length - 1;
-
-        int left = 0;
-        int right = grid[0].length - 1;
-
-        while (top <= bottom && left <= right) {
-
-            // Top row
-            for (int j = left; j <= right; j++) {
-                result.add(grid[top][j]);
-            }
-
-            top++;
-
-            // Right column
-            for (int i = top; i <= bottom; i++) {
-                result.add(grid[i][right]);
-            }
-
-            right--;
-
-            // Bottom row
-            if (top <= bottom) {
-
-                for (int j = right; j >= left; j--) {
-                    result.add(grid[bottom][j]);
+                if (plan[i][j] == 'E')
+                {
+                    dist[i][j] = 0;
+                    q.add(new int[]{i, j});
                 }
-
-                bottom--;
-            }
-
-            // Left column
-            if (left <= right) {
-
-                for (int i = bottom; i >= top; i--) {
-                    result.add(grid[i][left]);
-                }
-
-                left++;
             }
         }
 
-        return result;
+        int[] dr = {-1, 1, 0, 0};
+        int[] dc = {0, 0, -1, 1};
+
+        while (!q.isEmpty())
+        {
+            int[] cell = q.poll();
+
+            int r = cell[0];
+            int c = cell[1];
+
+            for (int k = 0; k < 4; k++)
+            {
+                int nr = r + dr[k];
+                int nc = c + dc[k];
+
+                if (nr >= 0 && nr < m &&
+                    nc >= 0 && nc < n &&
+                    plan[nr][nc] == '.' &&
+                    dist[nr][nc] == -1)
+                {
+                    dist[nr][nc] = dist[r][c] + 1;
+                    q.add(new int[]{nr, nc});
+                }
+            }
+        }
+
+        return dist;
     }
 
-    public static void main(String[] args) {
-
-        int[][] grid = {
-            {1, 2, 3, 4},
-            {5, 6, 7, 8},
-            {9, 10, 11, 12}
+    public static void main(String[] args)
+    {
+        char[][] plan = {
+            {'.', '#', '.', 'E'},
+            {'.', '.', '.', '#'},
+            {'E', '#', '.', '.'}
         };
 
-        System.out.println(
-            auditRoute(grid)
-        );
+        int[][] result = exitDistance(plan);
+
+        for (int i = 0; i < result.length; i++)
+        {
+            for (int j = 0; j < result[0].length; j++)
+                System.out.print(result[i][j] + " ");
+
+            System.out.println();
+        }
     }
 }

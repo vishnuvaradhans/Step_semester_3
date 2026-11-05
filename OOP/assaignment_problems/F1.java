@@ -1,53 +1,39 @@
 import java.util.*;
 
-public class F1 {
+public class F1
+{
+    static int[] priceStreak(int[] price)
+    {
+        int n = price.length;
+        int[] streak = new int[n];
 
-    static List<Long> footfallReport(
-            int[] visitors,
-            int[][] queries) {
+        Stack<Integer> stack = new Stack<>();
 
-        int n = visitors.length;
+        for (int i = 0; i < n; i++)
+        {
+            while (!stack.isEmpty() &&
+                   price[stack.peek()] <= price[i])
+            {
+                stack.pop();
+            }
 
-        long[] prefix = new long[n];
-        prefix[0] = visitors[0];
-
-        for (int i = 1; i < n; i++) {
-            prefix[i] = prefix[i - 1] + visitors[i];
-        }
-
-        List<Long> result = new ArrayList<>();
-
-        for (int[] query : queries) {
-
-            int start = query[0];
-            int end = query[1];
-
-            long sum;
-
-            if (start == 0)
-                sum = prefix[end];
+            if (stack.isEmpty())
+                streak[i] = i + 1;
             else
-                sum = prefix[end] - prefix[start - 1];
+                streak[i] = i - stack.peek();
 
-            result.add(sum);
+            stack.push(i);
         }
 
-        return result;
+        return streak;
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args)
+    {
+        int[] price = {100, 80, 60, 70, 60, 75, 85};
 
-        int[] visitors = {12, 7, 3, 9, 15, 4, 8};
+        int[] result = priceStreak(price);
 
-        int[][] queries = {
-            {0, 2},
-            {2, 5},
-            {4, 6},
-            {3, 3}
-        };
-
-        System.out.println(
-            footfallReport(visitors, queries)
-        );
+        System.out.println(Arrays.toString(result));
     }
 }

@@ -1,67 +1,102 @@
-public class F4 {
+public class F4
+{
+    static class BusBay
+    {
+        int[] arr;
+        int front, size, capacity;
 
-    static int firstGreaterOrEqual(
-            int[] scores,
-            int target) {
-
-        int left = 0;
-        int right = scores.length;
-
-        while (left < right) {
-
-            int mid = left + (right - left) / 2;
-
-            if (scores[mid] >= target)
-                right = mid;
-            else
-                left = mid + 1;
+        BusBay(int capacity)
+        {
+            this.capacity = capacity;
+            arr = new int[capacity];
+            front = 0;
+            size = 0;
         }
 
-        return left;
-    }
-
-    static int firstGreater(
-            int[] scores,
-            int target) {
-
-        int left = 0;
-        int right = scores.length;
-
-        while (left < right) {
-
-            int mid = left + (right - left) / 2;
-
-            if (scores[mid] > target)
-                right = mid;
-            else
-                left = mid + 1;
+        boolean isEmpty()
+        {
+            return size == 0;
         }
 
-        return left;
+        boolean isFull()
+        {
+            return size == capacity;
+        }
+
+        boolean insertFront(int bus)
+        {
+            if (isFull())
+                return false;
+
+            front = (front - 1 + capacity) % capacity;
+            arr[front] = bus;
+            size++;
+
+            return true;
+        }
+
+        boolean insertLast(int bus)
+        {
+            if (isFull())
+                return false;
+
+            int rear = (front + size) % capacity;
+            arr[rear] = bus;
+            size++;
+
+            return true;
+        }
+
+        boolean deleteFront()
+        {
+            if (isEmpty())
+                return false;
+
+            front = (front + 1) % capacity;
+            size--;
+
+            return true;
+        }
+
+        boolean deleteLast()
+        {
+            if (isEmpty())
+                return false;
+
+            size--;
+            return true;
+        }
+
+        int getFront()
+        {
+            if (isEmpty())
+                return -1;
+
+            return arr[front];
+        }
+
+        int getRear()
+        {
+            if (isEmpty())
+                return -1;
+
+            int rear = (front + size - 1) % capacity;
+            return arr[rear];
+        }
     }
 
-    static int countInBand(
-            int[] scores,
-            int low,
-            int high) {
+    public static void main(String[] args)
+    {
+        BusBay b = new BusBay(3);
 
-        int first = firstGreaterOrEqual(scores, low);
-        int afterLast = firstGreater(scores, high);
-
-        return afterLast - first;
-    }
-
-    public static void main(String[] args) {
-
-        int[] scores =
-            {35, 42, 42, 50, 58, 58, 58, 63, 71, 88};
-
-        System.out.println(
-            countInBand(scores, 42, 58)
-        );
-
-        System.out.println(
-            countInBand(scores, 90, 100)
-        );
+        System.out.println(b.insertLast(101));
+        System.out.println(b.insertLast(102));
+        System.out.println(b.insertFront(100));
+        System.out.println(b.insertFront(99));
+        System.out.println(b.getRear());
+        System.out.println(b.isFull());
+        System.out.println(b.deleteLast());
+        System.out.println(b.insertFront(98));
+        System.out.println(b.getFront());
     }
 }

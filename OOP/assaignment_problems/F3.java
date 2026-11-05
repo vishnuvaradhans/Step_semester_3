@@ -1,47 +1,91 @@
 import java.util.*;
 
-public class F3 {
-
-    static long countPeriods(
-            int[] transactions,
-            long k) {
-
-        HashMap<Long, Integer> map =
-            new HashMap<>();
-
-        map.put(0L, 1);
-
-        long prefixSum = 0;
-        long count = 0;
-
-        for (int value : transactions) {
-
-            prefixSum += value;
-
-            long required = prefixSum - k;
-
-            if (map.containsKey(required)) {
-                count += map.get(required);
-            }
-
-            map.put(
-                prefixSum,
-                map.getOrDefault(prefixSum, 0) + 1
-            );
-        }
-
-        return count;
+public class F3
+{
+    static int precedence(char op)
+    {
+        if (op == '+' || op == '-')
+            return 1;
+        if (op == '*' || op == '/')
+            return 2;
+        return 0;
     }
 
-    public static void main(String[] args) {
+    static void apply(Stack<Integer> values, Stack<Character> ops)
+    {
+        int b = values.pop();
+        int a = values.pop();
+        char op = ops.pop();
 
-        int[] transactions =
-            {3, 4, -7, 1, 3, 3, 1, -4};
+        switch (op)
+        {
+            case '+': values.push(a + b); break;
+            case '-': values.push(a - b); break;
+            case '*': values.push(a * b); break;
+            case '/': values.push(a / b); break;
+        }
+    }
 
-        long k = 7;
+    static int evaluate(String expr)
+    {
+        Stack<Integer> values = new Stack<>();
+        Stack<Character> ops = new Stack<>();
 
-        System.out.println(
-            countPeriods(transactions, k)
-        );
+        for (int i = 0; i < expr.length(); i++)
+        {
+            char ch = expr.charAt(i);
+
+            if (ch == ' ')
+                continue;
+
+            if (Character.isDigit(ch))
+            {
+                int num = 0;
+
+                while (i < expr.length() &&
+                       Character.isDigit(expr.charAt(i)))
+                {
+                    num = num * 10 + (expr.charAt(i) - '0');
+                    i++;
+                }
+
+                i--;
+                values.push(num);
+            }
+            else if (ch == '(')
+            {
+                ops.push(ch);
+            }
+            else if (ch == ')')
+            {
+                while (ops.peek() != '(')
+                    apply(values, ops);
+
+                ops.pop();
+            }
+            else
+            {
+                while (!ops.isEmpty() &&
+                       ops.peek() != '(' &&
+                       precedence(ops.peek()) >= precedence(ch))
+                {
+                    apply(values, ops);
+                }
+
+                ops.push(ch);
+            }
+        }
+
+        while (!ops.isEmpty())
+            apply(values, ops);
+
+        return values.pop();
+    }
+
+    public static void main(String[] args)
+    {
+        String expr = "2 * (3 + 4) - 10 / 5";
+
+        System.out.println(evaluate(expr));
     }
 }
